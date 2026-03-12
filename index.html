@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sito Colleiano - Eccellenza e Tradizione</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sito Colleiano: La fusione perfetta tra tradizione forestale e design moderno.">
+
+    <!-- Google Fonts: Inter & Playfair Display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        colleiano: {
+                            forest: '#1B3022',
+                            linen: '#F9F7F2',
+                            rust: '#A0522D',
+                            slate: '#2F2F2F',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Colleiano Design System -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header: Glassmorphism Nav -->
+    <header id="site-header" class="nav-glass fixed top-0 w-full z-50 transition-all duration-300"
+        style="background-color: transparent; border-bottom: none; box-shadow: none;">
+        <div class="nav-glass__inner">
+            <a href="#" class="nav-glass__brand flex items-end gap-2 !text-colleiano-linen"
+                style="text-decoration: none;">
+                <img src="src/icona_colleiano.png" alt="Icona Colleiano" class="h-12 md:h-14 w-auto object-contain" />
+                <span class="mb-2 text-xl md:text-2xl font-serif tracking-widest leading-none">COLLEIANO</span>
+            </a>
+            <nav class="hidden md:flex" aria-label="Navigazione principale">
+                <ul class="nav-glass__links">
+                    <li><a href="#programma"
+                            class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Programma</a>
+                    </li>
+                    <li><a href="#spazio-bimbi"
+                            class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Spazio Bimbi</a>
+                    </li>
+                    <li><a href="#sostienici"
+                            class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Sostienici</a>
+                    </li>
+                </ul>
+            </nav>
+            <a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer"
+                class="btn btn-primary btn-sm hidden md:inline-flex">Sostienici Ora</a>
+            <button class="md:hidden p-2 text-colleiano-linen" aria-label="Apri menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative min-h-[90vh] flex items-center justify-center text-center px-4 overflow-hidden pt-20">
+            <!-- Alpine Landscape Background -->
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
+                    alt="Paesaggio Alpino" class="w-full h-full object-cover object-center" />
+            </div>
+
+            <!-- Gradient Overlay: Transparent to Forest Deep -->
+            <div class="absolute inset-0 z-10"
+                style="background: linear-gradient(to bottom, rgba(27,48,34,0.1) 0%, rgba(27,48,34,0.5) 60%, #1B3022 100%);">
+            </div>
+
+            <div class="relative z-20 max-w-4xl flex flex-col items-center mt-12">
+                <!-- Main Title -->
+                <h1 class="text-display text-colleiano-linen mb-6 leading-tight drop-shadow-md">
+                    Festa del Borgo: <br>
+                    <span class="italic font-light text-colleiano-rust">17 Maggio</span>
+                </h1>
+
+                <!-- Poetic Sub-headline -->
+                <p class="text-xl md:text-2xl text-colleiano-linen/90 mb-10 font-sans max-w-2xl mx-auto drop-shadow-md">
+                    Un ritorno alle radici. Dove il respiro delle montagne incontra la memoria delle nostre mani,
+                    celebrando un'eredità che non sfiorisce.
+                </p>
+            </div>
+        </section>
+
+
+        <!-- Schedule of Events Section -->
+        <section id="programma" class="section container mx-auto px-4">
+            <div class="text-center mb-16">
+                <span class="text-eyebrow">Il Programma</span>
+                <h2 class="h2 mt-2">Programma degli Eventi</h2>
+                <div class="divider">Maggio 17</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Event 1 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">09:00</span>
+                        <h3 class="card__title">Apertura del Borgo</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Accoglienza nella piazza centrale. Il profumo del pane fresco e il suono delle campane
+                            inaugurano la giornata.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- Event 2 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">11:30</span>
+                        <h3 class="card__title">Corteo Storico</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Sfilata in costumi tradizionali attraverso i vicoli lastricati. Una rievocazione viva delle
+                            nostre antiche corporazioni.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- Event 3 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">13:00</span>
+                        <h3 class="card__title">Tavolata Castellana</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Pranzo comunitario all'aperto. Sapori autentici preparati con ricette tramandate di
+                            generazione in generazione.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- Event 4 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">16:00</span>
+                        <h3 class="card__title">Botteghe e Maestri</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Dimostrazioni di artigianato locale: intaglio del legno, tessitura tradizionale e
+                            lavorazione della pietra.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- Event 5 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">19:00</span>
+                        <h3 class="card__title">Canti del Crepuscolo</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Coro alpino al calar del sole. Melodie che riecheggiano la storia e la fierezza del nostro
+                            popolo montanaro.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- Event 6 -->
+                <article class="card card--bordered p-2 transition-transform duration-500 hover:-translate-y-2">
+                    <div class="card__body">
+                        <span
+                            class="text-rust font-sans font-bold text-sm tracking-widest uppercase mb-3 block">21:30</span>
+                        <h3 class="card__title">Il Falò di Maggio</h3>
+                        <p class="font-sans font-light text-colleiano-slate/70 leading-relaxed">
+                            Accensione del grande fuoco augurale. Storie attorno alle fiamme per chiudere la giornata in
+                            condivisione.
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Children's Area Section -->
+        <section id="spazio-bimbi" class="section section--linen relative overflow-hidden">
+            <div class="container container--medium text-center relative z-10 px-4">
+
+                <!-- Visual Element: Minimalist Illustration -->
+                <div class="flex justify-center mb-8 text-colleiano-forest/70">
+                    <svg class="w-16 h-16 md:w-20 md:h-20 stroke-current drop-shadow-sm" fill="none" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg" stroke-width="0.8">
+                        <!-- Stylized minimalistic blocks / nature fusion -->
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l-9 8h4v11h10V10h4l-9-8z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 21v-7a3 3 0 016 0v7"></path>
+                        <circle cx="12" cy="10" r="2" stroke="currentColor" fill="none"></circle>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18"></path>
+                    </svg>
+                </div>
+
+                <!-- Section Heading -->
+                <h2 class="h2 text-colleiano-forest mb-6 drop-shadow-sm">
+                    Un’Oasi per i Più Piccoli
+                </h2>
+
+                <!-- Descriptive Text -->
+                <p
+                    class="text-lg md:text-xl font-sans text-colleiano-forest/80 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
+                    Mentre vi immergete nell'atmosfera del festival, i vostri piccoli potranno esplorare un'area
+                    ispirata alla natura, studiata per garantire la massima <strong>sicurezza</strong> e ispirare la
+                    loro <strong>creatività</strong>. Sotto l'attenta supervisione di <strong>educatrici
+                        qualificate</strong>, vivranno laboratori ed esperienze ludiche in uno spazio protetto,
+                    permettendovi di godere l'evento con assoluta serenità.
+                </p>
+
+                <!-- Call to Action Button -->
+                <div class="flex justify-center mb-4">
+                    <a href="https://forms.gle/placeholder" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-primary btn-lg">
+                        Prenota lo Spazio Bimbi
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Legacy & Support Section (Donation) -->
+        <section id="sostienici" class="section section--forest relative overflow-hidden">
+            <!-- Subtle background texture logic via CSS, here applying a dark overlay just in case -->
+            <div class="absolute inset-0 bg-gradient-to-t from-colleiano-forest to-colleiano-forest/90 z-0"></div>
+
+            <div class="container container--narrow relative z-10 text-center py-8">
+                <span class="text-eyebrow text-colleiano-rust">Un Invito a Preservare</span>
+                <h2 class="h2 text-colleiano-linen mt-4 mb-6">Custodiamo il Nostro Domani</h2>
+
+                <p class="text-lg font-sans text-colleiano-linen/80 mb-10 max-w-xl mx-auto leading-relaxed font-light">
+                    Il Borgo vive attraverso i suoi eventi e la sua gente. <br>
+                    Il tuo contributo organizzare la Festa del Borgo, gli incontri popolari e mantenere viva la nostra
+                    eredità.
+                    Un gesto oggi, per celebrare insieme il nostro domani.
+                </p>
+
+                <div class="flex justify-center mb-12">
+                    <a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-primary btn-lg shadow-xl shadow-colleiano-forest/50 hover:-translate-y-1">
+                        Sostieni il Futuro del Borgo
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-colleiano-slate text-colleiano-linen/60 py-8 px-4 md:px-8 border-t border-colleiano-forest/20">
+        <div class="max-w-7xl mx-auto text-center text-xs tracking-widest">
+            &copy; 2026 COLLEIANO. TUTTI I DIRITTI RISERVATI.
+        </div>
+    </footer>
+
+    <script src="js/scripts.js"></script>
+</body>
+
+</html>

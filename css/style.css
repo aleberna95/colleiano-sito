@@ -1,0 +1,826 @@
+/* ============================================================
+   SITO COLLEIANO — DESIGN SYSTEM
+   ============================================================
+   
+   TABLE OF CONTENTS
+   1.  Google Fonts                         @import
+   2.  CSS Custom Properties (Tokens)       :root
+   3.  Reset & Base                         *, body
+   4.  Grain Texture Overlay                .grain-overlay
+   5.  Fluid Typography System              h1–h6, .text-*
+   6.  Glassmorphism Nav                    .nav-glass
+   7.  Button System + Micro-interactions   .btn-*
+   8.  Card System + Shadows                .card-*
+   9.  Section & Layout Utilities           .section-*, .container-*
+   10. Decorative Elements                  .divider, .tag, .badge
+   ============================================================ */
+
+
+/* ============================================================
+   1. GOOGLE FONTS
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+
+/* ============================================================
+   2. CSS CUSTOM PROPERTIES — DESIGN TOKENS
+   ============================================================ */
+:root {
+
+  /* --- Colour Palette: Colleiano --- */
+  --color-forest:    #1B3022;
+  --color-forest-10: rgba(27, 48, 34, 0.10);
+  --color-forest-20: rgba(27, 48, 34, 0.20);
+  --color-forest-40: rgba(27, 48, 34, 0.40);
+  --color-forest-60: rgba(27, 48, 34, 0.60);
+  --color-forest-80: rgba(27, 48, 34, 0.80);
+
+  --color-linen:     #F9F7F2;
+  --color-linen-80:  rgba(249, 247, 242, 0.80);
+  --color-linen-60:  rgba(249, 247, 242, 0.60);
+  --color-linen-40:  rgba(249, 247, 242, 0.40);
+
+  --color-rust:      #A0522D;
+  --color-rust-10:   rgba(160, 82, 45, 0.10);
+  --color-rust-20:   rgba(160, 82, 45, 0.20);
+  --color-rust-80:   rgba(160, 82, 45, 0.80);
+
+  --color-slate:     #2F2F2F;
+  --color-slate-60:  rgba(47, 47, 47, 0.60);
+  --color-slate-40:  rgba(47, 47, 47, 0.40);
+
+  /* Semantic aliases */
+  --color-bg:        var(--color-linen);
+  --color-text:      var(--color-slate);
+  --color-heading:   var(--color-forest);
+  --color-accent:    var(--color-rust);
+  --color-surface:   #FFFFFF;
+
+  /* --- Typography --- */
+  --font-sans:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif:  'Playfair Display', Georgia, serif;
+
+  /* Fluid type scale — golden ratio 1.618
+     Formula: clamp(min, preferred, max)
+     Base = 1rem (16px)                      */
+  --text-xs:    clamp(0.64rem,  0.60rem  + 0.20vw, 0.75rem);
+  --text-sm:    clamp(0.80rem,  0.76rem  + 0.20vw, 0.875rem);
+  --text-base:  clamp(1.00rem,  0.95rem  + 0.25vw, 1.125rem);
+  --text-md:    clamp(1.13rem,  1.05rem  + 0.40vw, 1.25rem);
+  --text-lg:    clamp(1.27rem,  1.15rem  + 0.60vw, 1.50rem);
+  --text-xl:    clamp(1.44rem,  1.25rem  + 0.95vw, 1.875rem);
+  --text-2xl:   clamp(1.73rem,  1.40rem  + 1.65vw, 2.50rem);
+  --text-3xl:   clamp(2.07rem,  1.60rem  + 2.35vw, 3.25rem);
+  --text-4xl:   clamp(2.49rem,  1.80rem  + 3.45vw, 4.00rem);
+  --text-5xl:   clamp(2.99rem,  1.95rem  + 5.20vw, 5.25rem);
+
+  /* --- Spacing --- */
+  --space-1:    0.25rem;
+  --space-2:    0.50rem;
+  --space-3:    0.75rem;
+  --space-4:    1.00rem;
+  --space-6:    1.50rem;
+  --space-8:    2.00rem;
+  --space-12:   3.00rem;
+  --space-16:   4.00rem;
+  --space-20:   5.00rem;
+  --space-24:   6.00rem;
+
+  /* --- Border Radius --- */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   16px;
+  --radius-full: 9999px;
+
+  /* --- Shadows: soft, diffused, premium --- */
+  --shadow-xs:  0 2px 8px -4px rgba(0, 0, 0, 0.08);
+  --shadow-sm:  0 4px 16px -8px rgba(0, 0, 0, 0.10);
+  --shadow-md:  0 10px 30px -15px rgba(0, 0, 0, 0.10);
+  --shadow-lg:  0 20px 50px -20px rgba(0, 0, 0, 0.12);
+  --shadow-xl:  0 32px 80px -24px rgba(0, 0, 0, 0.14);
+  /* Coloured accent shadow for interactive elements */
+  --shadow-rust: 0 8px 24px -8px rgba(160, 82, 45, 0.35);
+
+  /* --- Transitions --- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast:   150ms;
+  --duration-base:   300ms;
+  --duration-slow:   500ms;
+  --duration-xslow:  700ms;
+
+  /* --- Glassmorphism tokens --- */
+  --glass-blur:        blur(16px) saturate(180%);
+  --glass-bg-dark:     rgba(27, 48, 34, 0.72);
+  --glass-bg-light:    rgba(249, 247, 242, 0.75);
+  --glass-border:      rgba(249, 247, 242, 0.15);
+  --glass-border-dark: rgba(27, 48, 34, 0.20);
+}
+
+
+/* ============================================================
+   3. RESET & BASE STYLES
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  font-size: 16px; /* explicit baseline for clamp math */
+}
+
+body {
+  background-color: var(--color-bg);
+  color:            var(--color-text);
+  font-family:      var(--font-sans);
+  font-size:        var(--text-base);
+  line-height:      1.7;
+  min-height:       100vh;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-rust);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul, ol { list-style: none; }
+
+
+/* ============================================================
+   4. GRAIN TEXTURE OVERLAY
+   Mimics high-end stationery paper using an SVG turbulence
+   filter rendered via data URL — no external assets needed.
+   ============================================================ */
+
+/* Grain canvas lives in a ::before pseudo-element on the body
+   so it sits above the background but below all real content. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -50%;            /* oversized to prevent edge artifacts on scroll */
+  width: 200%;
+  height: 200%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: grain-drift 8s steps(1) infinite;
+}
+
+/* Subtle micro-randomness so it doesn't look static */
+@keyframes grain-drift {
+  0%   { transform: translate(0,     0);     }
+  10%  { transform: translate(-2%,  -1%);    }
+  20%  { transform: translate(1%,    2%);    }
+  30%  { transform: translate(-1%,   1%);    }
+  40%  { transform: translate(2%,   -2%);    }
+  50%  { transform: translate(-1%,   0%);    }
+  60%  { transform: translate(0%,    1%);    }
+  70%  { transform: translate(1%,   -1%);    }
+  80%  { transform: translate(-2%,   2%);    }
+  90%  { transform: translate(1%,    1%);    }
+  100% { transform: translate(0,     0);     }
+}
+
+/* All direct children of body should stack above the grain */
+body > * { position: relative; z-index: 1; }
+
+/* Explicit grain utility class — apply to any element */
+.grain-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: grain-drift 8s steps(1) infinite;
+}
+
+
+/* ============================================================
+   5. FLUID TYPOGRAPHY SYSTEM — PLAYFAIR DISPLAY + INTER
+   ============================================================ */
+
+/* ----- Heading defaults (Playfair Display, golden-ratio scale) --- */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family:    var(--font-serif);
+  color:          var(--color-heading);
+  line-height:    1.18;
+  letter-spacing: -0.02em;
+  font-weight:    700;
+}
+
+h1, .h1 { font-size: var(--text-5xl); }
+h2, .h2 { font-size: var(--text-4xl); }
+h3, .h3 { font-size: var(--text-3xl); }
+h4, .h4 { font-size: var(--text-2xl); }
+h5, .h5 { font-size: var(--text-xl);  }
+h6, .h6 { font-size: var(--text-lg);  }
+
+/* Italic variant — typically used for accent phrases */
+.heading-italic  { font-style: italic; }
+.heading-light   { font-weight: 400; }
+
+/* Display super-titles */
+.text-display {
+  font-family:    var(--font-serif);
+  font-size:      var(--text-5xl);
+  font-weight:    900;
+  line-height:    1.05;
+  letter-spacing: -0.03em;
+  color:          var(--color-heading);
+}
+
+/* Prose body sizes */
+.text-lead {
+  font-size:   var(--text-lg);
+  line-height: 1.65;
+  color:       var(--color-slate-60);
+}
+.text-body     { font-size: var(--text-base); line-height: 1.7; }
+.text-small    { font-size: var(--text-sm);   line-height: 1.6; }
+.text-xs       { font-size: var(--text-xs);   line-height: 1.5; }
+
+/* Utility overrides */
+.font-sans  { font-family: var(--font-sans);  }
+.font-serif { font-family: var(--font-serif); }
+
+/* Label / eyebrow text above headings */
+.text-eyebrow {
+  font-family:    var(--font-sans);
+  font-size:      var(--text-xs);
+  font-weight:    600;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color:          var(--color-rust);
+}
+
+/* Highlighted inline text */
+.text-rust   { color: var(--color-rust);   }
+.text-forest { color: var(--color-forest); }
+.text-linen  { color: var(--color-linen);  }
+.text-slate  { color: var(--color-slate);  }
+.text-muted  { color: var(--color-slate-60); }
+
+
+
+/* ============================================================
+   6. GLASSMORPHISM NAVIGATION
+   ============================================================ */
+
+/* Base nav wrapper — sticky, full width */
+.nav-glass {
+  position:         sticky;
+  top:              0;
+  left:             0;
+  right:            0;
+  z-index:          100;
+  width:            100%;
+
+  /* Translucent linen background */
+  background-color: var(--glass-bg-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+          backdrop-filter: var(--glass-blur);
+
+  /* Crisp bottom border to separate from content */
+  border-bottom:    1px solid var(--glass-border-dark);
+
+  /* Soft shadow — almost invisible */
+  box-shadow:       0 1px 20px -8px rgba(27, 48, 34, 0.12);
+
+  /* Smooth all transitions */
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    box-shadow       var(--duration-base) var(--ease-standard);
+}
+
+/* Dark forest variant (used on hero sections with dark backgrounds) */
+.nav-glass--dark {
+  background-color: var(--glass-bg-dark);
+  border-bottom:    1px solid var(--glass-border);
+  box-shadow:       0 1px 20px -8px rgba(0, 0, 0, 0.30);
+}
+
+/* Inner rail — constrains and aligns content */
+.nav-glass__inner {
+  max-width:   1440px;
+  margin:      0 auto;
+  padding:     0 var(--space-6);
+  height:      72px;
+  display:     flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:         var(--space-8);
+}
+
+/* Brand / logo area */
+.nav-glass__brand {
+  font-family:    var(--font-serif);
+  font-size:      var(--text-lg);
+  font-weight:    700;
+  color:          var(--color-forest);
+  letter-spacing: -0.01em;
+  transition:     opacity var(--duration-fast) var(--ease-standard);
+}
+.nav-glass--dark .nav-glass__brand { color: var(--color-linen); }
+.nav-glass__brand:hover { opacity: 0.75; }
+
+/* Nav links list */
+.nav-glass__links {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-8);
+}
+
+.nav-glass__link {
+  font-family:    var(--font-sans);
+  font-size:      var(--text-xs);
+  font-weight:    500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color:          var(--color-forest);
+  position:       relative;
+  padding-bottom: 3px;
+  transition:     color var(--duration-base) var(--ease-standard);
+}
+.nav-glass--dark .nav-glass__link { color: var(--color-linen-60); }
+
+/* Underline grow effect */
+.nav-glass__link::after {
+  content:          '';
+  position:         absolute;
+  bottom:           0;
+  left:             0;
+  width:            0%;
+  height:           1px;
+  background-color: var(--color-rust);
+  transition:       width var(--duration-slow) var(--ease-decelerate);
+}
+.nav-glass__link:hover { color: var(--color-rust); }
+.nav-glass__link:hover::after { width: 100%; }
+.nav-glass--dark .nav-glass__link:hover { color: var(--color-linen); }
+
+/* Active state */
+.nav-glass__link[aria-current="page"] {
+  color: var(--color-rust);
+}
+.nav-glass__link[aria-current="page"]::after {
+  width: 100%;
+}
+
+/* Scrolled state — slightly more opaque */
+.nav-glass.is-scrolled {
+  background-color: rgba(249, 247, 242, 0.92);
+  box-shadow: 0 4px 24px -12px rgba(27, 48, 34, 0.18);
+}
+
+
+/* ============================================================
+   7. BUTTON SYSTEM + MICRO-INTERACTIONS
+   ============================================================ */
+
+/* ---- Base button reset + shared properties ---- */
+.btn {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             var(--space-2);
+  padding:         14px 36px;
+  border:          1px solid transparent;
+  border-radius:   var(--radius-sm);
+  cursor:          pointer;
+  
+  font-family:     var(--font-sans);
+  font-size:       var(--text-xs);
+  font-weight:     600;
+  letter-spacing:  0.18em;
+  text-transform:  uppercase;
+  line-height:     1;
+  white-space:     nowrap;
+
+  /* duration-500 as requested */
+  transition:
+    background-color var(--duration-slow)  var(--ease-standard),
+    border-color     var(--duration-slow)  var(--ease-standard),
+    color            var(--duration-slow)  var(--ease-standard),
+    box-shadow       var(--duration-slow)  var(--ease-standard),
+    transform        var(--duration-base)  var(--ease-decelerate),
+    opacity          var(--duration-slow)  var(--ease-standard);
+
+  /* Slight scale-up on hover — transforms will be added per variant */
+  -webkit-user-select: none;
+          user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ripple shimmer on hover — subtle light sweep */
+.btn::before {
+  content:    '';
+  position:   absolute;
+  top:        0;
+  left:       -75%;
+  width:      50%;
+  height:     100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%
+  );
+  transform:   skewX(-20deg);
+  transition:  left var(--duration-slow) var(--ease-decelerate);
+  pointer-events: none;
+}
+.btn:hover::before { left: 150%; }
+
+.btn:active {
+  transform: scale(0.97) !important;
+  transition-duration: var(--duration-fast);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor:  not-allowed;
+  pointer-events: none;
+}
+
+/* ---- Primary: Rust filled ---- */
+.btn-primary {
+  background-color: var(--color-rust);
+  border-color:     var(--color-rust);
+  color:            var(--color-linen);
+  box-shadow:       var(--shadow-md);
+}
+.btn-primary:hover {
+  background-color: #8B4423;   /* deepened rust */
+  border-color:     #8B4423;
+  color:            var(--color-linen);
+  box-shadow:       var(--shadow-rust);
+  transform:        translateY(-2px) scale(1.02);
+}
+
+/* ---- Secondary: Forest filled ---- */
+.btn-secondary {
+  background-color: var(--color-forest);
+  border-color:     var(--color-forest);
+  color:            var(--color-linen);
+  box-shadow:       var(--shadow-md);
+}
+.btn-secondary:hover {
+  background-color: #142519;
+  border-color:     #142519;
+  box-shadow:       0 8px 24px -8px rgba(27, 48, 34, 0.45);
+  transform:        translateY(-2px) scale(1.02);
+}
+
+/* ---- Ghost: Transparent with rust border ---- */
+.btn-ghost {
+  background-color: transparent;
+  border-color:     var(--color-rust);
+  color:            var(--color-rust);
+}
+.btn-ghost:hover {
+  background-color: var(--color-rust);
+  color:            var(--color-linen);
+  box-shadow:       var(--shadow-rust);
+  transform:        translateY(-2px) scale(1.02);
+}
+
+/* ---- Outline: Forest border on linen ---- */
+.btn-outline {
+  background-color: transparent;
+  border-color:     var(--color-forest);
+  color:            var(--color-forest);
+}
+.btn-outline:hover {
+  background-color: var(--color-forest);
+  color:            var(--color-linen);
+  transform:        translateY(-2px) scale(1.02);
+}
+
+/* ---- Size modifiers ---- */
+.btn-sm {
+  padding:         10px 24px;
+  font-size:       calc(var(--text-xs) * 0.9);
+  letter-spacing:  0.12em;
+}
+.btn-lg {
+  padding:         18px 52px;
+  font-size:       var(--text-sm);
+  letter-spacing:  0.20em;
+}
+
+/* ---- Icon-only circular button ---- */
+.btn-icon {
+  padding:       12px;
+  border-radius: var(--radius-full);
+}
+
+
+/* ============================================================
+   8. CARD SYSTEM + SHADOWS
+   ============================================================ */
+
+/* ---- Base card ---- */
+.card {
+  background-color: var(--color-surface);
+  border-radius:    var(--radius-md);
+  overflow:         hidden;
+  
+  /* Requested: 0 10px 30px -15px rgba(0,0,0,0.1) */
+  box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.10);
+
+  transition:
+    box-shadow var(--duration-slow) var(--ease-standard),
+    transform  var(--duration-slow) var(--ease-decelerate);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform:  translateY(-4px);
+}
+
+/* ---- Card anatomy ---- */
+.card__media {
+  width:    100%;
+  overflow: hidden;
+  position: relative;
+}
+.card__media img {
+  width:   100%;
+  height:  100%;
+  object-fit: cover;
+  transition: transform var(--duration-xslow) var(--ease-decelerate);
+}
+.card:hover .card__media img { transform: scale(1.04); }
+
+.card__body {
+  padding: var(--space-6);
+}
+
+.card__eyebrow {
+  display:        block;
+  font-family:    var(--font-sans);
+  font-size:      var(--text-xs);
+  font-weight:    600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color:          var(--color-rust);
+  margin-bottom:  var(--space-2);
+}
+
+.card__title {
+  font-family:  var(--font-serif);
+  font-size:    var(--text-xl);
+  font-weight:  700;
+  color:        var(--color-forest);
+  line-height:  1.25;
+  margin-bottom: var(--space-3);
+}
+
+.card__text {
+  font-size:   var(--text-sm);
+  line-height: 1.65;
+  color:       var(--color-slate-60);
+  margin-bottom: var(--space-6);
+}
+
+.card__footer {
+  padding:      var(--space-4) var(--space-6);
+  border-top:   1px solid var(--color-forest-10);
+  display:      flex;
+  align-items:  center;
+  justify-content: space-between;
+}
+
+/* ---- Card variants ---- */
+
+/* Linen surface */
+.card--linen {
+  background-color: var(--color-linen);
+  border:           1px solid var(--color-forest-10);
+}
+
+/* Forest dark card */
+.card--dark {
+  background-color: var(--color-forest);
+}
+.card--dark .card__title { color: var(--color-linen); }
+.card--dark .card__text  { color: var(--color-linen-60); }
+.card--dark .card__eyebrow { color: var(--color-rust); }
+
+/* Bordered card — no fill */
+.card--bordered {
+  background-color: transparent;
+  border:           1px solid var(--color-forest-20);
+  box-shadow:       none;
+}
+.card--bordered:hover {
+  border-color: var(--color-rust);
+  box-shadow:   0 10px 30px -15px rgba(160, 82, 45, 0.20);
+  transform:    translateY(-4px);
+}
+
+/* Glassmorphism card */
+.card--glass {
+  background-color: var(--glass-bg-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+          backdrop-filter: var(--glass-blur);
+  border:           1px solid var(--glass-border-dark);
+}
+.card--glass:hover {
+  background-color: rgba(249, 247, 242, 0.88);
+}
+
+/* Horizontal layout card */
+.card--horizontal {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+.card--horizontal .card__media {
+  border-radius: 0;
+}
+@media (max-width: 640px) {
+  .card--horizontal { grid-template-columns: 1fr; }
+}
+
+
+/* ============================================================
+   9. SECTION & LAYOUT UTILITIES
+   ============================================================ */
+
+.container {
+  max-width: 1440px;
+  margin:    0 auto;
+  padding:   0 var(--space-6);
+}
+.container--narrow { max-width: 800px; }
+.container--medium { max-width: 1100px; }
+
+.section {
+  padding: var(--space-20) 0;
+}
+.section--sm  { padding: var(--space-12) 0; }
+.section--lg  { padding: var(--space-24) 0; }
+.section--xl  { padding: calc(var(--space-24) * 1.5) 0; }
+
+/* Forest-background section */
+.section--forest {
+  background-color: var(--color-forest);
+  color: var(--color-linen);
+}
+.section--forest h1,
+.section--forest h2,
+.section--forest h3,
+.section--forest h4 {
+  color: var(--color-linen);
+}
+
+/* Linen section — extra warm feel */
+.section--linen {
+  background-color: var(--color-linen);
+}
+
+/* Rust strip */
+.section--rust {
+  background-color: var(--color-rust);
+  color: var(--color-linen);
+}
+.section--rust h1,
+.section--rust h2,
+.section--rust h3 { color: var(--color-linen); }
+
+
+/* ============================================================
+   10. DECORATIVE ELEMENTS
+   ============================================================ */
+
+/* Thin ruled divider — art-deco feel */
+.divider {
+  display:        flex;
+  align-items:    center;
+  gap:            var(--space-4);
+  text-align:     center;
+  color:          var(--color-slate-40);
+  font-size:      var(--text-xs);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin:         var(--space-6) 0;
+}
+.divider::before,
+.divider::after {
+  content:    '';
+  flex:       1;
+  height:     1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-forest-20) 40%,
+    var(--color-forest-20) 60%,
+    transparent
+  );
+}
+.divider--rust::before,
+.divider--rust::after {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-rust-20) 40%,
+    var(--color-rust-20) 60%,
+    transparent
+  );
+}
+
+/* Pill tag */
+.tag {
+  display:         inline-flex;
+  align-items:     center;
+  padding:         4px 14px;
+  border-radius:   var(--radius-full);
+  font-family:     var(--font-sans);
+  font-size:       var(--text-xs);
+  font-weight:     500;
+  letter-spacing:  0.10em;
+  text-transform:  uppercase;
+  transition:      background-color var(--duration-base) var(--ease-standard),
+                   color var(--duration-base) var(--ease-standard);
+}
+.tag--forest { background-color: var(--color-forest-10); color: var(--color-forest); }
+.tag--rust   { background-color: var(--color-rust-10);   color: var(--color-rust);   }
+.tag--linen  { background-color: var(--color-linen);     color: var(--color-slate);  border: 1px solid var(--color-forest-10); }
+.tag--dark   { background-color: var(--color-forest);    color: var(--color-linen);  }
+
+/* Numeric / status badge */
+.badge {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       22px;
+  height:          22px;
+  padding:         0 7px;
+  border-radius:   var(--radius-full);
+  font-size:       11px;
+  font-weight:     700;
+  line-height:     1;
+}
+.badge--rust   { background-color: var(--color-rust);   color: #fff; }
+.badge--forest { background-color: var(--color-forest); color: var(--color-linen); }
+.badge--slate  { background-color: var(--color-slate);  color: var(--color-linen); }
+
+/* Quote / pull-quote block */
+.blockquote-colleiano {
+  position:         relative;
+  padding:          var(--space-6) var(--space-8);
+  border-left:      3px solid var(--color-rust);
+  background-color: var(--color-rust-10);
+  font-family:      var(--font-serif);
+  font-size:        var(--text-lg);
+  font-style:       italic;
+  color:            var(--color-forest);
+  line-height:      1.5;
+}
+.blockquote-colleiano cite {
+  display:         block;
+  margin-top:      var(--space-3);
+  font-family:     var(--font-sans);
+  font-size:       var(--text-xs);
+  font-style:      normal;
+  font-weight:     600;
+  letter-spacing:  0.12em;
+  text-transform:  uppercase;
+  color:           var(--color-rust);
+}

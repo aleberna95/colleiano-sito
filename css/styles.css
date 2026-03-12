@@ -1,0 +1,11 @@
+/* Custom Tailwind Base Styles */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Specific utilities if needed outside of Tailwind configuration */
+.max-container {
+    max-width: 1440px;
+}
