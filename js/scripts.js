@@ -200,13 +200,27 @@ document.addEventListener('DOMContentLoaded', () => {
             let mediaEl;
             if (isVideo) {
                 mediaEl = document.createElement('video');
-                mediaEl.src = mediaBasePath + file;
+                // Aggiungiamo './' davanti per sicurezza per alcune configurazioni server
+                mediaEl.src = './' + mediaBasePath + file;
+                
+                // Muted & Playsinline sono OBBLIGATORI come attributi su molti dispositivi mobile (iOS) per l'autoplay
                 mediaEl.muted = true;
-                mediaEl.loop = false; // Gestiamo il loop passando alla slide successiva
+                mediaEl.defaultMuted = true;
+                mediaEl.setAttribute('muted', '');
+                
                 mediaEl.playsInline = true;
+                mediaEl.setAttribute('playsinline', '');
+                
+                mediaEl.loop = false; // Gestiamo il loop passando alla slide successiva
+                
                 mediaEl.defaultPlaybackRate = videoPlaybackRate;
                 mediaEl.playbackRate = videoPlaybackRate;
                 mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
+                
+                // Aiuta col debug
+                mediaEl.addEventListener('error', (e) => {
+                    console.error('Errore caricamento video online:', file, e);
+                });
 
                 // When video ends, go to next
                 mediaEl.addEventListener('ended', () => {
@@ -214,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 mediaEl = document.createElement('img');
-                mediaEl.src = mediaBasePath + file;
+                mediaEl.src = './' + mediaBasePath + file;
                 mediaEl.alt = 'Colleiano Hero Carousel media ' + (index + 1);
                 mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
             }
