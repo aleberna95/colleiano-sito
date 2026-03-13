@@ -53,7 +53,8 @@
         <div class="nav-glass__inner">
             <a href="#" class="nav-glass__brand flex items-end gap-2 !text-colleiano-linen"
                 style="text-decoration: none;">
-                <img src="src/icona_colleiano.png" alt="Icona Colleiano" class="h-12 md:h-14 w-auto object-contain" />
+                <img src="src/icons/icona_colleiano.png" alt="Icona Colleiano"
+                    class="h-12 md:h-14 w-auto object-contain" />
                 <span class="mb-2 text-xl md:text-2xl font-serif tracking-widest leading-none">COLLEIANO</span>
             </a>
             <nav class="hidden md:flex" aria-label="Navigazione principale">
@@ -84,15 +85,19 @@
     <main class="flex-grow">
         <!-- Hero Section -->
         <section class="relative min-h-[90vh] flex items-center justify-center text-center px-4 overflow-hidden pt-20">
-            <!-- Alpine Landscape Background -->
-            <div class="absolute inset-0 z-0">
-                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
-                    alt="Paesaggio Alpino" class="w-full h-full object-cover object-center" />
+            <!-- Dynamic Carousel Background -->
+            <div id="hero-carousel" class="absolute inset-0 z-0 bg-colleiano-forest">
+                <!-- I media (video/immagini) verranno inseriti qui dal JavaScript -->
             </div>
 
             <!-- Gradient Overlay: Transparent to Forest Deep -->
-            <div class="absolute inset-0 z-10"
+            <div class="absolute inset-0 z-10 pointer-events-none"
                 style="background: linear-gradient(to bottom, rgba(27,48,34,0.1) 0%, rgba(27,48,34,0.5) 60%, #1B3022 100%);">
+            </div>
+            
+            <!-- Carousel Pagination Dots -->
+            <div id="hero-pagination" class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex gap-3">
+                <!-- I pallini verranno inseriti qui dal JavaScript -->
             </div>
 
             <div class="relative z-20 max-w-4xl flex flex-col items-center mt-12">

@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
        1. NAV MUTATION ON SCROLL
        ============================================================ */
     const header = document.getElementById('site-header');
-    
+
     // We already moved the scroll logic from index.html to here for better modularity
     const handleNavScroll = () => {
         if (!header) return;
-        
+
         if (window.scrollY > 50) {
             header.style.backgroundColor = 'var(--glass-bg-dark)';
             header.style.borderBottom = '1px solid var(--glass-border)';
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         anchor.addEventListener('click', function (e) {
             const targetId = this.getAttribute('href');
             if (targetId === '#') return; // Ignore empty hashes
-            
+
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
                 e.preventDefault();
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const headerOffset = 72;
                 const elementPosition = targetElement.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-  
+
                 window.scrollTo({
                     top: offsetPosition,
                     behavior: 'smooth'
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rootMargin: "0px 0px -50px 0px"
     };
 
-    const revealObserver = new IntersectionObserver(function(entries, observer) {
+    const revealObserver = new IntersectionObserver(function (entries, observer) {
         entries.forEach(entry => {
             if (!entry.isIntersecting) {
                 return;
@@ -100,12 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
        4. MOBILE MENU (OFF-CANVAS)
        ============================================================ */
     const mobileMenuBtn = document.querySelector('button[aria-label="Apri menu"]');
-    
+
     // Create the mobile menu DOM structure injecting it dynamically
     if (mobileMenuBtn) {
         const mobileMenu = document.createElement('div');
         mobileMenu.className = 'fixed inset-0 z-[100] bg-colleiano-forest/95 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500 opacity-0 pointer-events-none hidden';
-        
+
         mobileMenu.innerHTML = `
             <button class="absolute top-6 right-6 p-2 text-colleiano-linen/80 hover:text-white transition-colors" aria-label="Chiudi menu">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="#" class="hover:text-colleiano-linen transition-colors">FB</a>
             </div>
         `;
-        
+
         document.body.appendChild(mobileMenu);
         const closeBtn = mobileMenu.querySelector('button[aria-label="Chiudi menu"]');
         const links = mobileMenu.querySelectorAll('li');
@@ -158,13 +158,160 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mobileMenuBtn.addEventListener('click', () => toggleMenu(true));
         closeBtn.addEventListener('click', () => toggleMenu(false));
-        
+
         // Close menu when a link is clicked
         anchorLinks.forEach(link => {
             link.addEventListener('click', () => {
                 toggleMenu(false);
             });
         });
+    }
+
+    /* ============================================================
+       5. HERO CAROUSEL
+       ============================================================ */
+    const heroCarouselContainer = document.getElementById('hero-carousel');
+    const heroPaginationContainer = document.getElementById('hero-pagination');
+
+    if (heroCarouselContainer && heroPaginationContainer) {
+        // PER L'UTENTE: Aggiungi qui i nomi dei file presenti in src/assets/carosello.
+        // Purtroppo Javascript nel client non può leggere dinamicamente i file di 
+        // una cartella senza un backend, quindi dovrai aggiornare questo array!
+        const mediaFiles = [
+            'drone_pt1.mp4',
+            'drone_pt2.mp4'
+            // Esempio foto: 'paesaggio.jpg'
+        ];
+
+        const mediaBasePath = 'src/assets/carosello/';
+        const intervalTime = 6000; // Tempo display per le foto (6 secondi)
+        const videoPlaybackRate = 0.7; // <-- VELOCITÀ VIDEO (1.0 = normale, 0.5 = metà velocità)
+
+        let currentIndex = 0;
+        let mediaElements = [];
+        let dotElements = [];
+        let carouselInterval;
+
+        // Initialize Carousel
+        mediaFiles.forEach((file, index) => {
+            const isVideo = file.toLowerCase().endsWith('.mp4') || file.toLowerCase().endsWith('.webm');
+
+            // Create Media Element
+            let mediaEl;
+            if (isVideo) {
+                mediaEl = document.createElement('video');
+                mediaEl.src = mediaBasePath + file;
+                mediaEl.muted = true;
+                mediaEl.loop = false; // Gestiamo il loop passando alla slide successiva
+                mediaEl.playsInline = true;
+                mediaEl.defaultPlaybackRate = videoPlaybackRate;
+                mediaEl.playbackRate = videoPlaybackRate;
+                mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
+
+                // When video ends, go to next
+                mediaEl.addEventListener('ended', () => {
+                    nextSlide();
+                });
+            } else {
+                mediaEl = document.createElement('img');
+                mediaEl.src = mediaBasePath + file;
+                mediaEl.alt = 'Colleiano Hero Carousel media ' + (index + 1);
+                mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
+            }
+
+            if (index === 0) {
+                mediaEl.classList.remove('opacity-0');
+                mediaEl.classList.add('opacity-100');
+                mediaEl.style.zIndex = '1';
+            } else {
+                mediaEl.style.zIndex = '0';
+            }
+
+            mediaElements.push(mediaEl);
+            heroCarouselContainer.appendChild(mediaEl);
+
+            // Create Dot Element
+            const dot = document.createElement('button');
+            dot.classList.add('w-3', 'h-3', 'rounded-full', 'bg-colleiano-linen/50', 'transition-all', 'duration-300', 'hover:bg-colleiano-linen');
+            dot.setAttribute('aria-label', `Vai al contenuto multimediale ${index + 1}`);
+
+            if (index === 0) {
+                dot.classList.remove('bg-colleiano-linen/50');
+                dot.classList.add('bg-colleiano-linen', 'scale-125');
+            }
+
+            dot.addEventListener('click', () => {
+                if (currentIndex !== index) {
+                    goToSlide(index);
+                }
+            });
+
+            dotElements.push(dot);
+            heroPaginationContainer.appendChild(dot);
+        });
+
+        const updateCarouselDOM = (newIndex) => {
+            const oldIndex = currentIndex;
+            currentIndex = newIndex;
+
+            // Fade out old
+            mediaElements[oldIndex].classList.remove('opacity-100');
+            mediaElements[oldIndex].classList.add('opacity-0');
+            mediaElements[oldIndex].style.zIndex = '0';
+
+            // Pause old video and rewind slightly after fade out
+            if (mediaElements[oldIndex].tagName === 'VIDEO') {
+                setTimeout(() => {
+                    if (currentIndex !== oldIndex) { // double check we didn't go back
+                        mediaElements[oldIndex].pause();
+                        mediaElements[oldIndex].currentTime = 0;
+                    }
+                }, 1000); // 1s sync with css duration-1000
+            }
+
+            dotElements[oldIndex].classList.remove('bg-colleiano-linen', 'scale-125');
+            dotElements[oldIndex].classList.add('bg-colleiano-linen/50');
+
+            // Fade in new
+            mediaElements[currentIndex].classList.remove('opacity-0');
+            mediaElements[currentIndex].classList.add('opacity-100');
+            mediaElements[currentIndex].style.zIndex = '1';
+
+            dotElements[currentIndex].classList.remove('bg-colleiano-linen/50');
+            dotElements[currentIndex].classList.add('bg-colleiano-linen', 'scale-125');
+
+            if (mediaElements[currentIndex].tagName === 'VIDEO') {
+                mediaElements[currentIndex].play().catch(e => console.log('Autoplay prevented:', e));
+            }
+        };
+
+        const nextSlide = () => {
+            let nextIndex = (currentIndex + 1) % mediaFiles.length;
+            updateCarouselDOM(nextIndex);
+            manageInterval();
+        };
+
+        const goToSlide = (index) => {
+            updateCarouselDOM(index);
+            manageInterval();
+        };
+
+        const manageInterval = () => {
+            clearInterval(carouselInterval);
+            if (mediaElements[currentIndex].tagName !== 'VIDEO') {
+                // Solo per le foto serve il timer automatico, i video terminando chiamano nextSlide()
+                carouselInterval = setInterval(nextSlide, intervalTime);
+            }
+        };
+
+        // Start prima riproduzione/intervallo
+        setTimeout(() => {
+            if (mediaElements[currentIndex].tagName === 'VIDEO') {
+                mediaElements[currentIndex].play().catch(e => console.log('Autoplay prevented:', e));
+            } else {
+                manageInterval();
+            }
+        }, 300); // Piccolo delay per sicurezza autoplay su certi browser
     }
 
 });
