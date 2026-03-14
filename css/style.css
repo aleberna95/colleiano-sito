@@ -784,7 +784,6 @@ h6, .h6 { font-size: var(--text-lg);  }
 .tag--linen  { background-color: var(--color-linen);     color: var(--color-slate);  border: 1px solid var(--color-forest-10); }
 .tag--dark   { background-color: var(--color-forest);    color: var(--color-linen);  }
 
-/* Numeric / status badge */
 .badge {
   display:         inline-flex;
   align-items:     center;
@@ -798,6 +797,31 @@ h6, .h6 { font-size: var(--text-lg);  }
   line-height:     1;
 }
 .badge--rust   { background-color: var(--color-rust);   color: #fff; }
+
+/* ============================================================
+   11. CUSTOM SCROLLBAR
+   ============================================================ */
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-linen); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-forest-40); 
+  border: 3px solid var(--color-linen); /* Creates a padded look */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rust); 
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-forest-40) var(--color-linen);
+}
 .badge--forest { background-color: var(--color-forest); color: var(--color-linen); }
 .badge--slate  { background-color: var(--color-slate);  color: var(--color-linen); }
 

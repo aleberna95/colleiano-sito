@@ -6,6 +6,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ============================================================
+       0. PRELOADER
+       ============================================================ */
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+        window.addEventListener('load', () => {
+            // Piccolo delay per estetica e per assicurarci che il font sia renderizzato
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 1000); // match duration-1000
+            }, 300); 
+        });
+    }
+
+    /* ============================================================
        1. NAV MUTATION ON SCROLL
        ============================================================ */
     const header = document.getElementById('site-header');
@@ -114,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <ul class="space-y-8">
                     <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.1s;"><a href="#" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Home</a></li>
                     <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.2s;"><a href="#programma" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Programma</a></li>
-                    <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.3s;"><a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer" class="mobile-link text-3xl font-serif text-colleiano-rust hover:text-white transition-colors block">Sostienici Ora</a></li>
+                    <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.3s;"><a href="#info" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Info & Mappa</a></li>
+                    <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.4s;"><a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer" class="mobile-link text-3xl font-serif text-colleiano-rust hover:text-white transition-colors block">Sostienici Ora</a></li>
                 </ul>
             </nav>
             <div class="absolute bottom-10 flex gap-6 text-colleiano-linen/50">
@@ -133,6 +150,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Open
                 document.body.style.overflow = 'hidden';
                 mobileMenu.classList.remove('hidden');
+                
+                // --- Accessibility: Focus Trap Setup ---
+                const focusableElements = mobileMenu.querySelectorAll('a[href], button, textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select');
+                const firstFocusableElement = focusableElements[0];
+                const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+                // Focus on the first element when opening
+                setTimeout(() => { firstFocusableElement?.focus(); }, 100);
+
+                mobileMenu.addEventListener('keydown', function(e) {
+                    let isTabPressed = e.key === 'Tab' || e.keyCode === 9;
+                    if (!isTabPressed) return;
+
+                    if (e.shiftKey) { // shift + tab
+                        if (document.activeElement === firstFocusableElement) {
+                            lastFocusableElement.focus();
+                            e.preventDefault();
+                        }
+                    } else { // tab
+                        if (document.activeElement === lastFocusableElement) {
+                            firstFocusableElement.focus();
+                            e.preventDefault();
+                        }
+                    }
+                });
+                
                 // Small delay to allow display:block to take effect before opacity animates
                 setTimeout(() => {
                     mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
@@ -215,6 +258,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 mediaEl.defaultPlaybackRate = videoPlaybackRate;
                 mediaEl.playbackRate = videoPlaybackRate;
+                
+                // --- Performance & Media Optimization ---
+                // Se è il primo elemento prova a scaricarlo subito, altrimenti carica solo i metadati per risparmiare banda
+                mediaEl.preload = index === 0 ? 'auto' : 'metadata';
+                
+                // Usa un'immagine poster come preview prima che il video sia caricato (ottima per LCP e reti lente)
+                const posterName = file.substring(0, file.lastIndexOf('.')) + '-poster.webp';
+                mediaEl.poster = './' + mediaBasePath + posterName;
+
                 mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
                 
                 // Aiuta col debug
@@ -230,6 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 mediaEl = document.createElement('img');
                 mediaEl.src = './' + mediaBasePath + file;
                 mediaEl.alt = 'Colleiano Hero Carousel media ' + (index + 1);
+                
+                // --- Performance & Lazy Loading ---
+                if (index === 0) {
+                    mediaEl.loading = 'eager'; // Priorità alta per il Largest Contentful Paint
+                    mediaEl.fetchPriority = 'high';
+                } else {
+                    mediaEl.loading = 'lazy'; // Risparmia risorse per le immagini non subito visibili
+                }
+
                 mediaEl.classList.add('absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-opacity', 'duration-1000', 'opacity-0');
             }
 
@@ -326,6 +387,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 manageInterval();
             }
         }, 300); // Piccolo delay per sicurezza autoplay su certi browser
+    }
+
+    /* ============================================================
+       6. MAGNETIC BUTTONS (MICRO-INTERACTIONS)
+       ============================================================ */
+    const magneticButtons = document.querySelectorAll('.btn-primary, .btn-secondary');
+    
+    magneticButtons.forEach(btn => {
+        btn.addEventListener('mousemove', function(e) {
+            const position = btn.getBoundingClientRect();
+            // Calcola il centro del bottone
+            const x = e.clientX - position.left - position.width / 2;
+            const y = e.clientY - position.top - position.height / 2;
+            
+            // Applica una trasformazione leggera (0.15 della distanza dal centro)
+            btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px) scale(1.02)`;
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            // Reset della posizione
+            btn.style.transform = '';
+        });
+    });
+
+    /* ============================================================
+       7. PARALLAX EFFECT
+       ============================================================ */
+    const parallaxElements = document.querySelectorAll('.parallax');
+    
+    if (parallaxElements.length > 0) {
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            
+            // Richiede requestAnimationFrame per fluidità su monitor ad alto refresh rate
+            window.requestAnimationFrame(() => {
+                parallaxElements.forEach(el => {
+                    const speed = el.getAttribute('data-speed') || 0.1;
+                    // Limita lo spostamento massimo per non rompere il layout
+                    const limit = 60; 
+                    let yPos = -(scrolled * speed);
+                    
+                    if(yPos < -limit) yPos = -limit;
+                    if(yPos > limit) yPos = limit;
+                    
+                    el.style.transform = `translateY(${yPos}px)`;
+                });
+            });
+        }, { passive: true });
     }
 
 });

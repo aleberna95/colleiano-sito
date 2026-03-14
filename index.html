@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colleiano · Festa del Borgo — 17 Maggio</title>
 
+    <!-- Performance Optimization: Preload LCP (Largest Contentful Paint) Image -->
+    <link rel="preload" as="image" href="src/assets/carosello/drone_pt1-poster.webp" type="image/webp">
+
     <!-- SEO Meta Tags -->
     <meta name="description" content="Vivi la Festa del Borgo di Colleiano: tradizione, artigianato e memoria collettiva tra le montagne. Un'eredità che non sfiorisce.">
 
@@ -46,6 +49,18 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
+    <!-- Preloader -->
+    <div id="preloader"
+        class="fixed inset-0 z-[200] bg-colleiano-linen flex items-center justify-center transition-opacity duration-1000 ease-in-out">
+        <img src="src/icons/icona_colleiano.png" alt="Colleiano Logo Animato"
+            class="max-w-[120px] max-h-[120px] w-auto h-auto object-contain animate-pulse">
+    </div>
+
+    <!-- Accessibility: Skip to Content Link -->
+    <a href="#main-content"
+        class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-colleiano-rust focus:text-colleiano-linen focus:font-bold focus:outline-none focus:ring-4 focus:ring-colleiano-forest focus:top-0 focus:left-0 transition-all">
+        Salta al contenuto principale
+    </a>
 
     <!-- Header: Glassmorphism Nav -->
     <header id="site-header" class="nav-glass fixed top-0 w-full z-50 transition-all duration-300"
@@ -65,12 +80,15 @@
                     <li><a href="#spazio-bimbi"
                             class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Spazio Bimbi</a>
                     </li>
+                    <li><a href="#info" class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Info &
+                            Mappa</a>
+                    </li>
                     <li><a href="#sostienici"
                             class="nav-glass__link !text-colleiano-linen/90 hover:!text-white">Sostienici</a>
                     </li>
                 </ul>
             </nav>
-            <a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.paypal.com/pool/9nqWCvIZdX?sr=wccr" target="_blank" rel="noopener noreferrer"
                 class="btn btn-primary btn-sm hidden md:inline-flex">Sostienici Ora</a>
             <button class="md:hidden p-2 text-colleiano-linen" aria-label="Apri menu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +100,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow">
+    <main id="main-content" class="flex-grow focus:outline-none" tabindex="-1">
         <!-- Hero Section -->
         <section class="relative min-h-[90vh] flex items-center justify-center text-center px-4 overflow-hidden pt-20">
             <!-- Dynamic Carousel Background -->
@@ -94,7 +112,7 @@
             <div class="absolute inset-0 z-10 pointer-events-none"
                 style="background: linear-gradient(to bottom, rgba(27,48,34,0.1) 0%, rgba(27,48,34,0.5) 60%, #1B3022 100%);">
             </div>
-            
+
             <!-- Carousel Pagination Dots -->
             <div id="hero-pagination" class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex gap-3">
                 <!-- I pallini verranno inseriti qui dal JavaScript -->
@@ -210,7 +228,7 @@
             <div class="container container--medium text-center relative z-10 px-4">
 
                 <!-- Visual Element: Minimalist Illustration -->
-                <div class="flex justify-center mb-8 text-colleiano-forest/70">
+                <div class="flex justify-center mb-8 text-colleiano-forest/70 parallax" data-speed="0.1">
                     <svg class="w-16 h-16 md:w-20 md:h-20 stroke-current drop-shadow-sm" fill="none" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg" stroke-width="0.8">
                         <!-- Stylized minimalistic blocks / nature fusion -->
@@ -238,10 +256,214 @@
 
                 <!-- Call to Action Button -->
                 <div class="flex justify-center mb-4">
-                    <a href="https://forms.gle/placeholder" target="_blank" rel="noopener noreferrer"
+                    <a href="https://forms.gle/pf1k2hYB1HFEjLKZA" target="_blank" rel="noopener noreferrer"
                         class="btn btn-primary btn-lg">
                         Prenota lo Spazio Bimbi
                     </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Historical Gallery / Memories Section -->
+        <section id="memorie" class="section bg-white overflow-hidden">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <span class="text-eyebrow text-colleiano-forest">I Nostri Ricordi</span>
+                    <h2 class="h2 mt-2 text-colleiano-slate">Volti e Scorci delle Passate Edizioni</h2>
+                    <p class="text-lg text-colleiano-slate/70 mt-4 max-w-2xl mx-auto font-light">
+                        Un tuffo nelle emozioni degli anni scorsi. Sorrisi, tradizioni e la bellezza incontaminata del
+                        nostro borgo in festa.
+                    </p>
+                </div>
+
+                <!-- CSS-only horizontal scroll snap gallery -->
+                <div class="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory hide-scrollbars"
+                    style="scrollbar-width: none;">
+                    <!-- Gallery Item 1 -->
+                    <div
+                        class="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] rounded-lg overflow-hidden relative group">
+                        <img src="https://images.unsplash.com/photo-1533221375373-baec63f412fc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Festa in piazza"
+                            class="w-full h-80 object-cover transform transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-colleiano-forest/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                            <span class="text-colleiano-linen font-serif text-xl">La Tavolata 2024</span>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 2 -->
+                    <div
+                        class="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] rounded-lg overflow-hidden relative group">
+                        <img src="https://images.unsplash.com/photo-1542382257-80da9c501170?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Artigianato locale"
+                            class="w-full h-80 object-cover transform transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-colleiano-forest/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                            <span class="text-colleiano-linen font-serif text-xl">I Maestri Intagliatori</span>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 3 -->
+                    <div
+                        class="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] rounded-lg overflow-hidden relative group">
+                        <img src="https://images.unsplash.com/photo-1444491741275-3747c53c99b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Musica al tramonto"
+                            class="w-full h-80 object-cover transform transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-colleiano-forest/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                            <span class="text-colleiano-linen font-serif text-xl">Canti del Crepuscolo</span>
+                        </div>
+                    </div>
+                    <!-- Gallery Item 4 -->
+                    <div
+                        class="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] rounded-lg overflow-hidden relative group">
+                        <img src="https://images.unsplash.com/photo-1519782855193-dafb0b4c09d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Falò notturno"
+                            class="w-full h-80 object-cover transform transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-colleiano-forest/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                            <span class="text-colleiano-linen font-serif text-xl">Il Falò di Maggio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Information & FAQ Section -->
+        <section id="info" class="section section--linen border-t border-colleiano-forest/10">
+            <div class="container container--medium px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+                    <!-- Left: Dove Siamo & Mappa -->
+                    <div>
+                        <span class="text-eyebrow text-colleiano-rust">Come Raggiungerci</span>
+                        <h2 class="h3 mt-2 mb-6 text-colleiano-forest">Dove Siamo</h2>
+                        <p class="font-sans text-colleiano-slate/80 mb-6 font-light leading-relaxed">
+                            La Festa si svolge interamente nel cuore dell'antico borgo di Colleiano. Consigliamo di
+                            arrivare
+                            entro le ore 10:00 per usufruire dei parcheggi gratuiti designati all'ingresso del paese.
+                        </p>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-colleiano-forest/10 mb-6">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <svg class="w-6 h-6 shrink-0 text-colleiano-rust" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong class="block text-colleiano-slate font-sans">Indirizzo:</strong>
+                                        <span class="text-colleiano-slate/70 font-light">Colleiano-roccareonile
+                                            63093 AP</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Placeholder Map (Stylized) -->
+                        <div
+                            class="w-full h-64 bg-colleiano-slate/5 rounded-lg border border-colleiano-slate/10 overflow-hidden relative flex items-center justify-center group cursor-pointer">
+                            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                                alt="Mappa Colleiano"
+                                class="w-full h-full object-cover opacity-60 mix-blend-multiply group-hover:scale-105 transition-transform duration-700"
+                                loading="lazy">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <a href="https://maps.app.goo.gl/etLLkKWMANxE5Vrq5" target="_blank"
+                                    class="btn btn-primary drop-shadow-md">Apri in Google Maps</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: FAQ Accordion -->
+                    <div>
+                        <span class="text-eyebrow text-colleiano-rust">Hai dei dubbi?</span>
+                        <h2 class="h3 mt-2 mb-8 text-colleiano-forest">Domande Frequenti</h2>
+
+                        <div class="space-y-4" id="faq-container">
+                            <!-- FAQ Item 1 -->
+                            <details
+                                class="group bg-white rounded-lg shadow-sm border border-colleiano-forest/10 [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    class="flex items-center justify-between p-5 cursor-pointer font-serif font-bold text-lg text-colleiano-forest focus:outline-none focus:ring-2 focus:ring-colleiano-rust rounded-lg">
+                                    Posso portare il mio cane?
+                                    <span class="transition duration-300 group-open:-rotate-180 text-colleiano-rust">
+                                        <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                                            stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                            <path d="M6 9l6 6 6-6"></path>
+                                        </svg>
+                                    </span>
+                                </summary>
+                                <div class="px-5 pb-5 text-colleiano-slate/70 font-light font-sans leading-relaxed">
+                                    Assolutamente sì! I cani al guinzaglio sono i benvenuti in tutto il borgo.
+                                    Ricordiamo solo di avere sempre con sé i sacchetti per la raccolta delle deiezioni.
+                                </div>
+                            </details>
+
+                            <!-- FAQ Item 2 -->
+                            <details
+                                class="group bg-white rounded-lg shadow-sm border border-colleiano-forest/10 [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    class="flex items-center justify-between p-5 cursor-pointer font-serif font-bold text-lg text-colleiano-forest focus:outline-none focus:ring-2 focus:ring-colleiano-rust rounded-lg">
+                                    C'è un'opzione per vegetariani / celiaci?
+                                    <span class="transition duration-300 group-open:-rotate-180 text-colleiano-rust">
+                                        <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                                            stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                            <path d="M6 9l6 6 6-6"></path>
+                                        </svg>
+                                    </span>
+                                </summary>
+                                <div class="px-5 pb-5 text-colleiano-slate/70 font-light font-sans leading-relaxed">
+                                    Sì, la nostra Tavolata Castellana prevede sempre un menù alternativo vegetariano.
+                                    Per i celiaci è garantita una selezione di prodotti senza glutine, tuttavia
+                                    raccomandiamo di comunicarlo al momento dell'arrivo.
+                                </div>
+                            </details>
+
+                            <!-- FAQ Item 3 -->
+                            <details
+                                class="group bg-white rounded-lg shadow-sm border border-colleiano-forest/10 [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    class="flex items-center justify-between p-5 cursor-pointer font-serif font-bold text-lg text-colleiano-forest focus:outline-none focus:ring-2 focus:ring-colleiano-rust rounded-lg">
+                                    Ingresso a pagamento?
+                                    <span class="transition duration-300 group-open:-rotate-180 text-colleiano-rust">
+                                        <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                                            stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                            <path d="M6 9l6 6 6-6"></path>
+                                        </svg>
+                                    </span>
+                                </summary>
+                                <div class="px-5 pb-5 text-colleiano-slate/70 font-light font-sans leading-relaxed">
+                                    L'ingresso al borgo e agli spettacoli è completamente gratuito. Il cibo, le bevande
+                                    e i laboratori speciali sono a pagamento. Le donazioni volontarie sono sempre ben
+                                    accette per aiutarci a sostenere l'evento!
+                                </div>
+                            </details>
+
+                            <!-- FAQ Item 4 -->
+                            <details
+                                class="group bg-white rounded-lg shadow-sm border border-colleiano-forest/10 [&_summary::-webkit-details-marker]:hidden">
+                                <summary
+                                    class="flex items-center justify-between p-5 cursor-pointer font-serif font-bold text-lg text-colleiano-forest focus:outline-none focus:ring-2 focus:ring-colleiano-rust rounded-lg">
+                                    Cosa succede in caso di pioggia?
+                                    <span class="transition duration-300 group-open:-rotate-180 text-colleiano-rust">
+                                        <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                                            stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                            <path d="M6 9l6 6 6-6"></path>
+                                        </svg>
+                                    </span>
+                                </summary>
+                                <div class="px-5 pb-5 text-colleiano-slate/70 font-light font-sans leading-relaxed">
+                                    So cazzi
+                                </div>
+                            </details>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -263,7 +485,7 @@
                 </p>
 
                 <div class="flex justify-center mb-12">
-                    <a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer"
+                    <a href="https://www.paypal.com/pool/9nqWCvIZdX?sr=wccr" target="_blank" rel="noopener noreferrer"
                         class="btn btn-primary btn-lg shadow-xl shadow-colleiano-forest/50 hover:-translate-y-1">
                         Sostieni il Futuro del Borgo
                     </a>
