@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.1s;"><a href="#" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Home</a></li>
                     <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.2s;"><a href="#programma" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Programma</a></li>
                     <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.3s;"><a href="#info" class="mobile-link text-3xl font-serif text-colleiano-linen hover:text-colleiano-rust transition-colors block">Info & Mappa</a></li>
-                    <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.4s;"><a href="https://paypal.me/sitocolleiano" target="_blank" rel="noopener noreferrer" class="mobile-link text-3xl font-serif text-colleiano-rust hover:text-white transition-colors block">Sostienici Ora</a></li>
+                    <li style="transform: translateY(20px); opacity: 0; transition: all 0.4s ease 0.4s;"><a href="https://www.paypal.com/pool/9nqWCvIZdX?sr=wccr" target="_blank" rel="noopener noreferrer" class="mobile-link text-3xl font-serif text-colleiano-rust hover:text-white transition-colors block">Sostienici Ora</a></li>
                 </ul>
             </nav>
             <div class="absolute bottom-10 flex gap-6 text-colleiano-linen/50">
