@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Palette, forme e ombre del sito attuale (SPEC 9.2, legacy-site/css/style.css).
+   Le varianti trasparenti si ottengono con il modificatore di Tailwind:
+   bg-colleiano-forest/10, text-colleiano-slate/60, ... */
+:root {
+  --color-forest: #1b3022;
+  --color-linen: #f9f7f2;
+  --color-rust: #a0522d;
+  --color-slate: #2f2f2f;
+  --color-surface: #ffffff;
+  --color-danger: #b3261e;
+  --color-warning: #b26a00;
+  --color-success: #2e7d32;
+
+  /* Token di shadcn/ui mappati sulla palette */
+  --background: var(--color-linen);
+  --foreground: var(--color-slate);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-slate);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-slate);
+  --primary: var(--color-forest);
+  --primary-foreground: var(--color-linen);
+  --secondary: var(--color-rust);
+  --secondary-foreground: #ffffff;
+  --muted: #efebe2;
+  --muted-foreground: #5c5c5c;
+  --accent: #efebe2;
+  --accent-foreground: var(--color-forest);
+  --destructive: var(--color-danger);
+  --border: #ddd7ca;
+  --input: #c9c2b3;
+  --ring: var(--color-rust);
+}
+
+@theme inline {
+  --color-colleiano-forest: var(--color-forest);
+  --color-colleiano-linen: var(--color-linen);
+  --color-colleiano-rust: var(--color-rust);
+  --color-colleiano-slate: var(--color-slate);
+  --color-colleiano-surface: var(--color-surface);
+  --color-colleiano-danger: var(--color-danger);
+  --color-colleiano-warning: var(--color-warning);
+  --color-colleiano-success: var(--color-success);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-playfair), Georgia, serif;
+
+  /* Base del gestionale più grande del sito: 17px (SPEC 9.1) */
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --shadow-xs: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 4px 16px -8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 50px -20px rgba(0, 0, 0, 0.12);
+  --shadow-rust: 0 8px 24px -8px rgba(160, 82, 45, 0.35);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-base text-foreground;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading text-colleiano-forest;
+  }
+}

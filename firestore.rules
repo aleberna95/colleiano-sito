@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Le regole sono la fonte di verità dei permessi (SPEC 4).
+// lib/permissions.ts le replica per la UI: tenerli allineati.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isSuperadmin() { return signedIn() && request.auth.token.superadmin == true; }
+    function m(f) { return get(/databases/$(database)/documents/feste/$(f)/membri/$(request.auth.uid)).data; }
+    function isMembro(f) { return signedIn() && exists(/databases/$(database)/documents/feste/$(f)/membri/$(request.auth.uid)) && m(f).attivo == true; }
+    function isAdmin(f) { return isSuperadmin() || (isMembro(f) && m(f).ruoloFesta == "admin"); }
+    function ruolo(f, c) { return m(f).commissioni.get(c, null); }
+    function isReferente(f, c) { return isMembro(f) && ruolo(f, c) == "referente"; }
+    function canManage(f, c) { return isAdmin(f) || isReferente(f, c); }
+
+    // M0: tutto chiuso. Ogni milestone apre solo ciò che serve, con i suoi test.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
