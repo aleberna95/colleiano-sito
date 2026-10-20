@@ -1,0 +1,23 @@
+# Configurazione di Firebase App Hosting (backend collegato al ramo main).
+# La configurazione web di Firebase è pubblica (la sicurezza la fanno le Security Rules):
+# niente segreti in questo file.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBApAwtSKmwpD74raTfIH6Hl5AnL9LCh2I
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: colleiano.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: colleiano
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: colleiano.firebasestorage.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:337081871782:web:829ff8d0f4e94854fe7367
+    availability: [BUILD, RUNTIME]
