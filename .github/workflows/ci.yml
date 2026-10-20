@@ -26,3 +26,5 @@ jobs:
       - run: pnpm test:rules
       - run: pnpm --dir functions build
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

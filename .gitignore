@@ -47,3 +47,7 @@ firebase-debug.*.log
 ui-debug.log
 functions/lib/
 .emulator-data/
+
+# playwright
+/test-results/
+/playwright-report/

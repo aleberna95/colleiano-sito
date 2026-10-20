@@ -5,7 +5,7 @@ import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 
 // In sviluppo si usano gli emulatori (progetto finto demo-colleiano).
-// Su App Hosting la configurazione arriva da sola: initializeApp() senza argomenti.
+// In produzione la configurazione web (pubblica, non segreta) arriva da apphosting.yaml.
 const useEmulators =
   process.env.NEXT_PUBLIC_USE_EMULATORS === "true" ||
   (process.env.NODE_ENV === "development" &&
@@ -13,12 +13,25 @@ const useEmulators =
 
 export const REGION = "europe-west1";
 
+const config = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
 function createApp(): FirebaseApp {
   if (getApps().length) return getApp();
-  if (useEmulators) {
-    return initializeApp({ apiKey: "demo-key", projectId: "demo-colleiano" });
+  // Senza configurazione (es. build in CI) si usa il progetto finto: nessuna chiamata reale.
+  if (useEmulators || !config.apiKey) {
+    return initializeApp({
+      apiKey: "demo-key",
+      projectId: "demo-colleiano",
+      storageBucket: "demo-colleiano.appspot.com",
+    });
   }
-  return initializeApp();
+  return initializeApp(config);
 }
 
 export const app = createApp();

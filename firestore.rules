@@ -14,9 +14,26 @@ service cloud.firestore {
     function isReferente(f, c) { return isMembro(f) && ruolo(f, c) == "referente"; }
     function canManage(f, c) { return isAdmin(f) || isReferente(f, c); }
 
-    // M0: tutto chiuso. Ogni milestone apre solo ciò che serve, con i suoi test.
-    match /{document=**} {
-      allow read, write: if false;
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    // Tutto ciò che non è aperto qui sotto resta chiuso.
+
+    // Profili: li crea e modifica la Function (o lo script di bootstrap).
+    // L'utente può solo segnare di aver cambiato la password e ricordare l'ultima festa.
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isSuperadmin();
+      allow update: if isSelf(uid)
+        && resource.data.attivo == true
+        && changedOnly(["devoCambiarePassword", "ultimaFestaId", "updatedAt", "updatedBy"])
+        && request.resource.data.devoCambiarePassword == false
+        && request.resource.data.updatedBy == uid
+        && request.resource.data.updatedAt == request.time
+        && (!("ultimaFestaId" in request.resource.data) || request.resource.data.ultimaFestaId is string);
+    }
+
+    match /feste/{f} {
+      allow read: if isSuperadmin();
     }
   }
 }
