@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -10,10 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Caricamento } from "@/components/stato";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { FesteProvider } from "@/lib/feste-context";
 
 const CAMBIA_PASSWORD = "/gestione/cambia-password";
 
+// Con Cache Components usePathname() su rotte dinamiche va letto dentro un <Suspense>.
 export default function ProtettaLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<Caricamento />}>
+      <Protetta>{children}</Protetta>
+    </Suspense>
+  );
+}
+
+function Protetta({ children }: { children: React.ReactNode }) {
   const stato = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -46,7 +56,9 @@ export default function ProtettaLayout({ children }: { children: React.ReactNode
           </Button>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6">{children}</main>
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6">
+        <FesteProvider>{children}</FesteProvider>
+      </main>
     </>
   );
 }

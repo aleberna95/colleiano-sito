@@ -1,69 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { collection, getDocs } from "firebase/firestore";
-import { PartyPopper, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreaFestaForm } from "@/components/crea-festa-form";
 import { Avviso, Caricamento } from "@/components/stato";
-import { db } from "@/lib/firebase";
 import { useUtente } from "@/lib/auth-context";
+import { useFeste } from "@/lib/feste-context";
 
+// Porta d'ingresso: apre l'ultima festa usata, altrimenti fa scegliere.
 export default function GestioneHome() {
   const { superadmin, profilo } = useUtente();
-  const [numFeste, setNumFeste] = useState<number | "errore">();
+  const stato = useFeste();
+  const router = useRouter();
+
+  const feste = stato.status === "ok" ? stato.feste : undefined;
+  const destinazione =
+    feste?.find((f) => f.id === profilo?.ultimaFestaId) ?? (feste?.length === 1 ? feste[0] : undefined);
 
   useEffect(() => {
-    if (!superadmin) return;
-    getDocs(collection(db, "feste"))
-      .then((snap) => setNumFeste(snap.size))
-      .catch(() => setNumFeste("errore"));
-  }, [superadmin]);
+    if (destinazione) router.replace(`/gestione/f/${destinazione.slug}`);
+  }, [destinazione, router]);
 
-  if (!superadmin) {
-    return (
-      <Card className="mx-auto w-full max-w-md">
-        <CardHeader>
-          <CardTitle>
-            <h1>Ciao {profilo?.nome}!</h1>
-          </CardTitle>
-          <CardDescription>
-            Non fai ancora parte di nessuna festa. Chiedi a un admin del comitato di aggiungerti.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  if (numFeste === undefined) return <Caricamento />;
-  if (numFeste === "errore") return <Avviso tipo="errore">Non riesco a caricare le feste. Riprova.</Avviso>;
+  if (stato.status === "loading" || destinazione) return <Caricamento />;
+  if (stato.status === "errore") return <Avviso tipo="errore">Non riesco a caricare le feste. Riprova.</Avviso>;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <h1 className="text-3xl">Ciao {profilo?.nome}!</h1>
-      {numFeste === 0 ? (
+
+      {feste!.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>Scegli la festa</h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {feste!.map((f) => (
+              <Button key={f.id} asChild variant="outline" size="lg" className="justify-between">
+                <Link href={`/gestione/f/${f.slug}`}>
+                  {f.nome}
+                  <ChevronRight aria-hidden />
+                </Link>
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {feste!.length === 0 && !superadmin && (
+        <Card>
+          <CardHeader>
+            <CardDescription>
+              Non fai ancora parte di nessuna festa. Chiedi a un admin del comitato di aggiungerti.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {feste!.length === 0 && superadmin && (
         <Card>
           <CardHeader>
             <CardTitle>
               <h2>Crea la prima festa</h2>
             </CardTitle>
             <CardDescription>
-              Ancora non c&apos;è nessuna festa. Creala: insieme nasce la commissione Generale, poi
-              potrai aggiungere le persone del comitato.
+              Ancora non c&apos;è nessuna festa. Creala: insieme nasce la commissione Generale, poi potrai
+              aggiungere le persone del comitato.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild size="lg" className="w-full">
-              <Link href="/gestione/admin">
-                <PartyPopper aria-hidden />
-                Crea la prima festa
-              </Link>
-            </Button>
+            <CreaFestaForm />
           </CardContent>
         </Card>
-      ) : (
-        <Button asChild size="lg" variant="outline">
+      )}
+
+      {superadmin && (
+        <Button asChild size="lg" variant="ghost">
           <Link href="/gestione/admin">
             <ShieldCheck aria-hidden />
             Account e feste

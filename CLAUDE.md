@@ -43,6 +43,9 @@ Next 16 ha API diverse da quelle note: leggere `node_modules/next/dist/docs/` pr
 | `pnpm emulators` | compila le Functions e avvia gli emulatori (UI su http://localhost:4000) |
 | `pnpm test` | test unitari |
 | `pnpm test:rules` | test delle regole (avvia da solo l'emulatore Firestore) |
+| `pnpm test:functions` | test delle Functions (emulatori auth, firestore, functions) |
+| `pnpm test:e2e` | Playwright a 375px sulla build collegata agli emulatori |
+| `pnpm bootstrap:superadmin` | crea il superadmin (`--emulator` oppure `--project colleiano`) |
 | `pnpm lint` / `pnpm typecheck` | controlli |
 | `pnpm check` | lint + typecheck + test unitari |
 

@@ -36,7 +36,7 @@ test("primo accesso del superadmin: cambia password e vede 'Crea la prima festa'
   await page.getByRole("button", { name: "Entra" }).click();
   await expect(page.getByRole("heading", { name: "Crea la prima festa" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Crea la prima festa" }).click();
+  await page.getByRole("link", { name: "Account e feste" }).click();
   await expect(page.getByRole("heading", { name: "Account e feste" })).toBeVisible();
   await expect(page.getByText("alessio@test.it")).toBeVisible();
 });

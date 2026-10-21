@@ -5,6 +5,9 @@ export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
   workers: 1,
+  timeout: 90_000,
+  // La prima chiamata alle Functions sull'emulatore avvia un processo: può essere lenta.
+  expect: { timeout: 20_000 },
   retries: process.env.CI ? 1 : 0,
   use: {
     baseURL: "http://localhost:3100",
@@ -12,10 +15,10 @@ export default defineConfig({
   },
   // Telefono da 375px (SPEC, definition of done)
   projects: [{ name: "mobile", use: { ...devices["iPhone 13"], browserName: "chromium", viewport: { width: 375, height: 740 } } }],
-  // Build di produzione collegata agli emulatori: consuma meno memoria di `next dev`.
+  // Build di produzione collegata agli emulatori (la fa `pnpm test:e2e` prima di avviarli):
+  // consuma meno memoria di `next dev`.
   webServer: {
-    command: "pnpm exec next build && pnpm exec next start --port 3100",
-    env: { NEXT_PUBLIC_USE_EMULATORS: "true" },
+    command: "pnpm exec next start --port 3100",
     url: "http://localhost:3100",
     reuseExistingServer: false,
     timeout: 300_000,

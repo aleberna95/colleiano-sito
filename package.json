@@ -13,7 +13,7 @@
     "emulators": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:start --project demo-colleiano",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "bootstrap:superadmin": "tsx scripts/bootstrap-superadmin.ts",
-    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-colleiano \"playwright test\"",
+    "test:e2e": "pnpm --dir functions build && cross-env NEXT_PUBLIC_USE_EMULATORS=true next build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"playwright test\"",
     "test:functions": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"vitest run --project functions\""
   },
   "dependencies": {
