@@ -18,9 +18,9 @@ async function esci(page: Page) {
 }
 
 async function nuovaPersona(page: Page, dati: { nome: string; email: string; admin?: boolean }) {
-  await page.getByRole("link", { name: "Altro" }).click();
-  await page.getByRole("link", { name: "Persone" }).click();
-  await page.getByRole("link", { name: "Nuova persona" }).click();
+  await page.getByRole("link", { name: "Altro", exact: true }).click();
+  await page.getByRole("link", { name: "Persone", exact: true }).click();
+  await page.getByRole("link", { name: "Nuova persona", exact: true }).click();
   await page.getByLabel("Nome", { exact: true }).fill(dati.nome);
   await page.getByLabel("Cognome").fill("Test");
   await page.getByLabel("Telefono (per WhatsApp)").fill("333 123 4567");
@@ -56,17 +56,17 @@ test("il superadmin crea festa e admin; l'admin crea un membro, non un admin", a
   await expect(page).toHaveURL(/\/gestione\/f\/festa-di-prova$/);
 
   // L'admin non può scegliere il ruolo Admin: crea solo membri
-  await page.getByRole("link", { name: "Altro" }).click();
-  await page.getByRole("link", { name: "Persone" }).click();
-  await page.getByRole("link", { name: "Nuova persona" }).click();
+  await page.getByRole("link", { name: "Altro", exact: true }).click();
+  await page.getByRole("link", { name: "Persone", exact: true }).click();
+  await page.getByRole("link", { name: "Nuova persona", exact: true }).click();
   await expect(page.getByLabel("Ruolo nella festa")).toHaveCount(0);
   await page.goBack();
   await nuovaPersona(page, { nome: "Mario", email: "mario@test.it" });
 
   // Crea una commissione e ci mette Mario come referente
-  await page.getByRole("link", { name: "Altro" }).click();
-  await page.getByRole("link", { name: "Commissioni" }).click();
-  await page.getByRole("link", { name: "Nuova commissione" }).click();
+  await page.getByRole("link", { name: "Altro", exact: true }).click();
+  await page.getByRole("link", { name: "Commissioni", exact: true }).click();
+  await page.getByRole("link", { name: "Nuova commissione", exact: true }).click();
   await page.getByLabel("Nome").fill("Musica");
   await page.getByRole("button", { name: "Crea la commissione" }).click();
   await expect(page.getByRole("heading", { name: "Musica" })).toBeVisible();
@@ -76,6 +76,6 @@ test("il superadmin crea festa e admin; l'admin crea un membro, non un admin", a
   await expect(page.getByRole("button", { name: "Togli Mario" })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "Mario" }).filter({ hasText: "referente" }).first()).toBeVisible();
 
-  await page.getByRole("link", { name: "Indietro" }).click();
+  await page.getByRole("link", { name: "Indietro", exact: true }).click();
   await expect(page.getByText("Referenti: Mario")).toBeVisible();
 });
