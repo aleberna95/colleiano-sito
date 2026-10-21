@@ -10,7 +10,7 @@
   **Da fare da Alessio**: (1) prova di M1/M2/M3 in produzione con la checklist data in chat (Claude non ha la password del superadmin);
   (2) fatto il 21/10/2026: policy di pulizia delle immagini delle Functions:
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
-  M4: da pubblicare con `pnpm exec firebase deploy --only firestore,storage,functions --project prod` PRIMA del push su `main` (App Hosting pubblica la UI a ogni push).
+  M4 pubblicata il 21/10/2026 (regole, Storage, 14 Functions). Regola: deploy di regole e Functions PRIMA del push su `main` (App Hosting pubblica la UI a ogni push).
   M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Da verificare: caricamento di un allegato (le regole di Storage leggono Firestore e potrebbero richiedere un permesso IAM in più).
 
 ## Fase 1
@@ -20,7 +20,7 @@
 | M1 Accesso | ✅ in codice e test (manca la prova in produzione, dopo il punto 6) |
 | M2 Feste, persone, commissioni | ✅ in codice e test (prova in produzione dopo il punto 6) |
 | M3 Task | ✅ in codice e test, pubblicata (prova in produzione da fare) |
-| M4 Spese e rimborsi | ✅ in codice e test (vedi sotto per deploy) |
+| M4 Spese e rimborsi | ✅ in codice e test, pubblicata (prova in produzione da fare) |
 | M5 Rifinitura e deploy | – |
 
 ### M1
