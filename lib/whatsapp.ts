@@ -19,6 +19,13 @@ export function indirizzoGestionale(): string {
   return typeof window === "undefined" ? "/gestione" : `${window.location.origin}/gestione`;
 }
 
+/** Indirizzo completo di una pagina del gestionale, da mettere nei messaggi. */
+export function linkPagina(percorso: string): string {
+  return typeof window === "undefined" ? percorso : `${window.location.origin}${percorso}`;
+}
+
+const conScadenza = (scadenza?: string) => (scadenza ? `\nEntro: ${scadenza}` : "");
+
 export const testi = {
   credenziali: (p: { nome: string; email: string; password: string }) =>
     `Ciao ${p.nome}! Ti ho aggiunto al gestionale della festa di Colleiano.\n\n` +
@@ -37,4 +44,30 @@ export const testi = {
     `Email: ${p.email}\n` +
     `Password temporanea: ${p.password}\n\n` +
     `Appena entri ti chiederà di sceglierne una tua.`,
+
+  taskAssegnato: (p: { nome: string; titolo: string; scadenza?: string; link: string }) =>
+    `Ciao ${p.nome}! Ti ho dato un task nel gestionale di Colleiano:\n\n` +
+    `"${p.titolo}"${conScadenza(p.scadenza)}\n\n` +
+    `Lo trovi qui: ${p.link}`,
+
+  richiestaInviata: (p: { nome: string; commissione: string; titolo: string; link: string }) =>
+    `Ciao ${p.nome}! Ho fatto una richiesta alla commissione ${p.commissione}:\n\n` +
+    `"${p.titolo}"\n\n` +
+    `Puoi accettarla e assegnarla, oppure rifiutarla, da qui: ${p.link}`,
+
+  richiestaAccettata: (p: { nome: string; titolo: string; responsabile: string; link: string }) =>
+    `Ciao ${p.nome}! La tua richiesta "${p.titolo}" è stata accettata: se ne occupa ${p.responsabile}.\n\n` +
+    `La segui da qui: ${p.link}`,
+
+  richiestaRifiutata: (p: { nome: string; titolo: string; motivo: string; link: string }) =>
+    `Ciao ${p.nome}! La tua richiesta "${p.titolo}" non è stata accettata.\n` +
+    `Motivo: ${p.motivo}\n\n` +
+    `Dettagli: ${p.link}`,
+
+  condividiTask: (p: { titolo: string; commissione: string; stato: string; responsabile: string; scadenza?: string; link: string }) =>
+    `${p.titolo}\n` +
+    `Commissione: ${p.commissione}\n` +
+    `Stato: ${p.stato}\n` +
+    `Chi se ne occupa: ${p.responsabile}${conScadenza(p.scadenza)}\n\n` +
+    `${p.link}`,
 };

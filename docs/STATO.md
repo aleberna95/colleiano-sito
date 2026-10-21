@@ -4,12 +4,12 @@
 
 ## Setup del repo (SPEC 8.0)
 - [x] 1-5. Ramo `sito-2026` (Pages pubblica da lì, colleiano.it ok, confermato da Alessio), `main` ripulito in `legacy-site/`, spec in `docs/SPEC.md`.
-- [ ] 6. Produzione, progetto Firebase `colleiano` (alias `prod`). Fatto da Claude: app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), regole Firestore pubblicate (versione M1), `apphosting.yaml`. Firestore `eur3` creato da Alessio.
-  **Da fare da Alessio** (istruzioni già date in chat, ripeterle se serve):
-  A. piano Blaze + avviso budget 5 €; B. Auth email/password + lingua modelli italiano; C. Storage (eur3/europe-west1, modalità produzione);
-  D. backend App Hosting `colleiano-hub` su `aleberna95/colleiano-sito`, ramo `main`, root `/`, regione europe-west1 (o europe-west4), app web "Colleiano Hub" → comunicare l'URL `*.hosted.app`;
-  E. superadmin: `winget install Google.CloudSDK`, `gcloud auth application-default login`, `gcloud auth application-default set-quota-project colleiano`, poi `pnpm bootstrap:superadmin --project colleiano --email alebernardini95@gmail.com --nome Alessio --cognome Bernardini --telefono <numero>` (lo lancia Alessio: la password la deve vedere solo lui).
-  Dopo A-D: deploy di regole/indici aggiornati e Functions (`firebase deploy --only firestore,functions --project prod`).
+- [x] 6. Produzione, progetto Firebase `colleiano` (alias `prod`): app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), Firestore `eur3`, Blaze, Auth email/password, Storage, backend App Hosting, superadmin (passi A-E fatti da Alessio il 21/10/2026).
+  Deploy del 21/10/2026: regole/indici + 6 Functions M2 in europe-west1.
+  **Da fare da Alessio**: (1) mandare a Claude l'URL `*.hosted.app` per la prova di M1/M2/M3 in produzione;
+  (2) policy di pulizia delle immagini delle Functions (Claude non ha il permesso):
+  `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
+  Dopo M3: `pnpm exec firebase deploy --only firestore,storage,functions --project prod` (al primo deploy di `storage.rules` la CLI chiede di dare a Storage il permesso di leggere Firestore: rispondere sì).
 
 ## Fase 1
 | Milestone | Stato |
@@ -17,7 +17,7 @@
 | M0 Fondamenta | ✅ |
 | M1 Accesso | ✅ in codice e test (manca la prova in produzione, dopo il punto 6) |
 | M2 Feste, persone, commissioni | ✅ in codice e test (prova in produzione dopo il punto 6) |
-| M3 Task | – |
+| M3 Task | ✅ in codice e test (prova in produzione da fare) |
 | M4 Spese e rimborsi | – |
 | M5 Rifinitura e deploy | – |
 
@@ -30,8 +30,17 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - UI: home con scelta festa / "Crea la prima festa"; `/gestione/f/[slug]` con selettore festa e barra in basso (Le mie cose · Task · Spese · Altro); Persone (elenco, nuova persona con credenziali su WhatsApp, scheda con ruoli, nuova password, togli dalla festa); Commissioni (card, nuova, scheda con modifica e persone); Impostazioni (dati festa, archivia/riapri per superadmin); admin (feste, account, superadmin, disattiva).
 - e2e `tests/e2e/persone.spec.ts`: superadmin crea festa e admin, l'admin crea un membro (senza opzione admin) e lo mette referente di una commissione. Verde.
 
-### Prossimo passo: M3 (Task e richieste, "Le mie cose", pulsanti WhatsApp)
-SPEC 4.4, 4.7 n.2-7, 6.2, 6.3, 6.6. Partire dal piano: regole task + test, trigger storico, form corto, lista con filtri, dettaglio (checklist, link, commenti, storico; allegati con Storage), "Le mie cose" completa, testi WhatsApp in `lib/whatsapp.ts`.
+### M3
+- Regole (`firestore.rules`): task creati e modificati direttamente dal client (niente callable). `puoAssegnare` = pari o sotto (admin chiunque attivo; referente referenti/componenti della commissione o "da assegnare"; componente solo componenti, mai "da assegnare"). Modifiche per ruolo: admin tutto (anche spostare), referente tutto tranne spostare, responsabile stato/checklist/link/motivo blocco (+ dati se il task se l'è dato da solo), creatore solo finché "Da fare", richiedente solo finché "Richiesta". Richieste: le manda chi non è nella commissione (non l'admin, che crea direttamente); accettare = `da_fare` + responsabile, rifiutare = `annullato` + `motivoRifiuto`, ritirare = `annullato`. Coerenza: richiesta senza responsabile, in corso/bloccato/fatto con responsabile.
+- Commenti (autore entro 15 minuti, referenti/admin sempre) e allegati (`feste/{f}/tasks/{t}/allegati/{id}` + file in Storage allo stesso percorso, solo foto/PDF < 10 MB; responsabile, referenti, admin). `storage.rules` legge Firestore (`firestore.get`).
+- Trigger `storicoTask` (`functions/src/tasks.ts`) con `vocePerTask` in `lib/schemas/storico.ts` (condiviso, test unitari).
+- `lib/permissions.ts`: `assegnabili`, `creazioneTask`, `permessiTask`, `puoCommentare`, `puoModificareCommento`, `commissioniPerTask`; parità con le regole in `tests/rules/tasks.test.ts` (51 test regole verdi, anche Storage).
+- UI: `/task` (filtri a bottoni Da chiudere/Scaduti/Da assegnare/Richieste/Fatti + commissione e persona), `/task/nuovo` (form corto; commissione non mia = richiesta), `/task/[taskId]` (azioni per stato: Inizio/Fatto/Sono bloccato/Riprendo/Riapri, assegna, accetta/rifiuta, annulla; modifica; checklist; link e allegati; commenti; storico; Condividi), "Le mie cose" (Da gestire, I miei task con Inizio/Fatto, Task dati ad altri, countdown), task aperti nella pagina della commissione. Testi WhatsApp in `lib/whatsapp.ts`.
+- Dati: `lib/data/tasks.ts` (hook in tempo reale + scritture), `lib/tasks.ts` (stati, filtri, ordinamento, scadenze).
+- e2e `tests/e2e/tasks.spec.ts` (festa scritta direttamente sull'emulatore da `creaFesta` in `tests/e2e/helpers.ts`). Verde.
+
+### Prossimo passo: M4 (Spese, approvazioni, rimborsi, CSV)
+SPEC 4.5, 4.7 n.9-11, 5 (movimenti, rimborsi), 6.2 n.4 ("I miei soldi" e "spese da approvare" in Da gestire), 6.4, 6.6 (WhatsApp spese). Callable per approva/rifiuta/annulla/rimborsa, scontrini in Storage, trigger storico movimenti, e2e: spesa anticipata → approvata → rimborsata, saldo giusto.
 
 ## Decisioni prese durante lo sviluppo
 - Pages: al PUT aggiunto `cname=colleiano.it`.
@@ -45,10 +54,14 @@ SPEC 4.4, 4.7 n.2-7, 6.2, 6.3, 6.6. Partire dal piano: regole task + test, trigg
 - Conferme delle azioni importanti in due passi visibili (`ConfermaAzione`), niente popup.
 - e2e: build di produzione collegata agli emulatori fatta PRIMA di avviarli (con 8 GB di RAM `next dev`/build insieme agli emulatori va in crash); attese a 20 s.
 
+- Next 16 tiene montata (nascosta) la pagina precedente: negli e2e usare selettori per ruolo (`getByRole`), che ignorano gli elementi nascosti, invece di `getByLabel`.
+- Regole: `request.auth.token.get("superadmin", false)` invece di `.superadmin`, per non avere errori nei log quando il claim manca.
+
 ## Problemi aperti
 - PC con 8 GB di RAM (spesso <1 GB liberi): test lenti, a volte crash della build. Chiudere programmi pesanti prima di `pnpm test:e2e`.
 - `gh` in `C:\Program Files\GitHub CLI\gh.exe`, non ancora nel PATH del terminale di VS Code (riavviare il PC).
-- Le sessioni lunghe di Claude si sono interrotte durante comandi lunghi: lanciare e2e/functions test in background.
+- Le sessioni lunghe di Claude si sono interrotte durante comandi lunghi: lanciare e2e/functions test in background, uno alla volta (due `test:rules` insieme si pestano le porte).
+- `pnpm test:rules` ora avvia due JVM (Firestore + Storage): con <1 GB libero l'emulatore a volte muore per memoria (`hs_err_pid*.log` nella root, da cancellare). Basta rilanciare. `JAVA_TOOL_OPTIONS` non si può usare: il messaggio "Picked up..." manda in errore le regole di Storage.
 
 ## Comandi
 Vedi `CLAUDE.md`. Test: `pnpm test` (unit), `pnpm test:rules`, `pnpm test:functions`, `pnpm test:e2e`. Sviluppo: `pnpm emulators` + `pnpm dev`; superadmin locale: `pnpm bootstrap:superadmin --emulator --email ... --nome ... --cognome ... --telefono ...`.

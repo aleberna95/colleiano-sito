@@ -6,7 +6,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
-    function isSuperadmin() { return signedIn() && request.auth.token.superadmin == true; }
+    function isSuperadmin() { return signedIn() && request.auth.token.get("superadmin", false) == true; }
     function m(f) { return get(/databases/$(database)/documents/feste/$(f)/membri/$(request.auth.uid)).data; }
     function isMembro(f) { return signedIn() && exists(/databases/$(database)/documents/feste/$(f)/membri/$(request.auth.uid)) && m(f).attivo == true; }
     function isAdmin(f) { return isSuperadmin() || (isMembro(f) && m(f).ruoloFesta == "admin"); }
@@ -103,6 +103,149 @@ service cloud.firestore {
             && changedOnly(["descrizione", "updatedAt", "updatedBy"])
             && optString(request.resource.data, "descrizione", 500))
         );
+      }
+
+      // ---- Task e richieste (SPEC 4.4) ----
+
+      function io() { return request.auth.uid; }
+      function membroDi(uid) { return get(/databases/$(database)/documents/feste/$(f)/membri/$(uid)).data; }
+      function attivo(uid) { return membroDi(uid).attivo == true; }
+      function ruoloDi(uid, c) { return membroDi(uid).commissioni.get(c, null); }
+      function commissioneEsiste(c) { return exists(/databases/$(database)/documents/feste/$(f)/commissioni/$(c)); }
+
+      // A chi posso dare un task della commissione c: pari o sotto, dentro il proprio ambito.
+      // null = "da assegnare", permesso solo a referenti e admin.
+      function puoAssegnare(c, resp) {
+        return isAdmin(f) ? (resp == null || attivo(resp))
+          : isReferente(f, c) ? (resp == null || (attivo(resp) && ruoloDi(resp, c) in ["referente", "componente"]))
+          : isMembro(f) && ruolo(f, c) == "componente" && resp != null && attivo(resp) && ruoloDi(resp, c) == "componente";
+      }
+
+      function taskValido(d) {
+        return d.keys().hasOnly(["titolo", "descrizione", "commissioneId", "responsabileUid", "stato", "richiestoDa",
+               "motivoBlocco", "motivoRifiuto", "priorita", "scadenza", "checklist", "link", "eliminato",
+               "createdAt", "createdBy", "updatedAt", "updatedBy"])
+          && d.keys().hasAll(["titolo", "commissioneId", "responsabileUid", "stato", "priorita", "checklist", "link", "eliminato"])
+          && d.titolo is string && d.titolo.size() >= 1 && d.titolo.size() <= 200
+          && optString(d, "descrizione", 2000)
+          && optString(d, "motivoBlocco", 500)
+          && optString(d, "motivoRifiuto", 500)
+          && d.commissioneId is string
+          && (d.responsabileUid == null || d.responsabileUid is string)
+          && d.stato in ["richiesta", "da_fare", "in_corso", "bloccato", "fatto", "annullato"]
+          && d.priorita in ["normale", "urgente"]
+          && (!("scadenza" in d) || d.scadenza is timestamp)
+          && d.checklist is list && d.checklist.size() <= 50
+          && d.link is list && d.link.size() <= 20
+          && d.eliminato is bool
+          // Una richiesta non ha ancora responsabile; un task iniziato sì.
+          && (d.stato != "richiesta" || d.responsabileUid == null)
+          && (d.stato in ["richiesta", "da_fare", "annullato"] || d.responsabileUid != null);
+      }
+
+      // Admin: tutto, anche spostarlo di commissione.
+      function modificaAdmin(d, o) {
+        return isAdmin(f)
+          && (d.commissioneId == o.commissioneId || commissioneEsiste(d.commissioneId))
+          && (d.responsabileUid == o.responsabileUid || d.responsabileUid == null || attivo(d.responsabileUid));
+      }
+
+      // Referente: tutto sui task della sua commissione, senza spostarli.
+      function modificaReferente(d, o) {
+        return isReferente(f, o.commissioneId)
+          && d.commissioneId == o.commissioneId
+          && (d.responsabileUid == o.responsabileUid || puoAssegnare(o.commissioneId, d.responsabileUid));
+      }
+
+      // Responsabile: stato, checklist, link e motivo del blocco; se il task se l'è dato da solo, anche i dati.
+      // Mai commissione o responsabile.
+      function modificaResponsabile(d, o) {
+        let proprio = o.createdBy == io() && o.get("richiestoDa", null) == null;
+        return isMembro(f) && o.responsabileUid == io()
+          && o.stato in ["da_fare", "in_corso", "bloccato", "fatto"]
+          && (changedOnly(["stato", "checklist", "link", "motivoBlocco", "updatedAt", "updatedBy"])
+            || (proprio && changedOnly(["stato", "checklist", "link", "motivoBlocco", "titolo", "descrizione", "scadenza", "priorita", "updatedAt", "updatedBy"])))
+          && (d.stato in ["da_fare", "in_corso", "bloccato", "fatto"] || (proprio && d.stato == "annullato"));
+      }
+
+      // Creatore (diverso dal responsabile): modifica o annulla solo finché è "Da fare".
+      function modificaCreatore(d, o) {
+        return isMembro(f) && o.createdBy == io() && o.get("richiestoDa", null) == null
+          && o.stato == "da_fare"
+          && changedOnly(["titolo", "descrizione", "scadenza", "priorita", "checklist", "link", "stato", "updatedAt", "updatedBy"])
+          && d.stato in ["da_fare", "annullato"];
+      }
+
+      // Richiedente: modifica o ritira finché è una richiesta.
+      function modificaRichiedente(d, o) {
+        return isMembro(f) && o.get("richiestoDa", null) == io()
+          && o.stato == "richiesta"
+          && changedOnly(["titolo", "descrizione", "scadenza", "priorita", "checklist", "link", "stato", "updatedAt", "updatedBy"])
+          && d.stato in ["richiesta", "annullato"];
+      }
+
+      match /tasks/{t} {
+        allow read: if isMembro(f) || isSuperadmin();
+
+        allow create: if scrivibile(f) && auditCreate()
+          && taskValido(request.resource.data)
+          && request.resource.data.eliminato == false
+          && commissioneEsiste(request.resource.data.commissioneId)
+          && (
+            // Task normale, assegnato a chi posso scegliere.
+            (request.resource.data.stato == "da_fare"
+              && !("richiestoDa" in request.resource.data)
+              && puoAssegnare(request.resource.data.commissioneId, request.resource.data.responsabileUid))
+            // Richiesta a una commissione di cui non faccio parte (l'admin il task lo crea direttamente).
+            || (request.resource.data.stato == "richiesta"
+              && request.resource.data.get("richiestoDa", null) == io()
+              && isMembro(f) && !isAdmin(f) && ruolo(f, request.resource.data.commissioneId) == null)
+          );
+
+        allow update: if scrivibile(f) && auditUpdate()
+          && taskValido(request.resource.data)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["createdAt", "createdBy", "richiestoDa"])
+          && (modificaAdmin(request.resource.data, resource.data)
+            || modificaReferente(request.resource.data, resource.data)
+            || modificaResponsabile(request.resource.data, resource.data)
+            || modificaCreatore(request.resource.data, resource.data)
+            || modificaRichiedente(request.resource.data, resource.data));
+
+        function task() { return get(/databases/$(database)/documents/feste/$(f)/tasks/$(t)).data; }
+        function testoValido(d) { return d.testo is string && d.testo.size() >= 1 && d.testo.size() <= 2000; }
+
+        // Commenti: li scrive chiunque nella festa; li modificano l'autore (entro 15 minuti) e referenti/admin.
+        match /commenti/{id} {
+          allow read: if isMembro(f) || isSuperadmin();
+          allow create: if scrivibile(f) && (isMembro(f) || isSuperadmin())
+            && request.resource.data.keys().hasOnly(["testo", "autoreUid", "createdAt"])
+            && request.resource.data.autoreUid == io()
+            && request.resource.data.createdAt == request.time
+            && testoValido(request.resource.data);
+          allow update: if scrivibile(f)
+            && changedOnly(["testo", "modificatoAt"])
+            && request.resource.data.modificatoAt == request.time
+            && testoValido(request.resource.data)
+            && ((isMembro(f) && resource.data.autoreUid == io() && request.time < resource.data.createdAt + duration.value(15, "m"))
+              || canManage(f, task().commissioneId));
+        }
+
+        // Allegati: li aggiungono e tolgono il responsabile, i referenti della commissione e gli admin.
+        // Il file sta in Storage allo stesso percorso (storage.rules ripete il controllo).
+        function puoAllegare() {
+          return canManage(f, task().commissioneId) || (isMembro(f) && task().responsabileUid == io());
+        }
+        match /allegati/{id} {
+          allow read: if isMembro(f) || isSuperadmin();
+          allow create: if scrivibile(f) && puoAllegare()
+            && request.resource.data.keys().hasOnly(["nome", "mime", "path", "createdAt", "createdBy"])
+            && request.resource.data.createdBy == io()
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.nome is string && request.resource.data.nome.size() >= 1 && request.resource.data.nome.size() <= 200
+            && request.resource.data.mime is string && request.resource.data.mime.size() <= 100
+            && request.resource.data.path == "feste/" + f + "/tasks/" + t + "/" + id;
+          allow delete: if scrivibile(f) && puoAllegare();
+        }
       }
     }
   }

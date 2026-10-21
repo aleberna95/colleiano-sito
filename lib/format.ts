@@ -59,3 +59,13 @@ export const COLORI_COMMISSIONE: Record<ColoreCommissione, { nome: string; class
   teal: { nome: "Teal", classi: "bg-teal-100 text-teal-900 border-teal-300" },
   grigio: { nome: "Grigio", classi: "bg-stone-100 text-stone-800 border-stone-300" },
 };
+
+/** "ven 14 ago" */
+export function formatGiorno(ts: TimestampLike | Date): string {
+  return format(inItalia(ts), "EEE d MMM", { locale: it });
+}
+
+/** "14 ago, 18:30" */
+export function formatQuando(ts: TimestampLike | Date): string {
+  return format(inItalia(ts), "d MMM, HH:mm", { locale: it });
+}

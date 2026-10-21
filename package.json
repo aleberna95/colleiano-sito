@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit && pnpm --dir functions typecheck",
     "test": "vitest run --project unit",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-colleiano \"vitest run --project rules\"",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-colleiano \"vitest run --project rules\"",
     "emulators": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:start --project demo-colleiano",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "bootstrap:superadmin": "tsx scripts/bootstrap-superadmin.ts",

@@ -3,18 +3,22 @@
 import { Suspense, useState } from "react";
 import { useParams } from "next/navigation";
 import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { UserPlus, X } from "lucide-react";
+import Link from "next/link";
+import { Plus, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Selezione, StatoVuoto, TitoloPagina } from "@/components/comuni";
 import { CommissioneForm } from "@/components/commissione-form";
+import { ListaTask } from "@/components/task-riga";
 import { Avviso, Caricamento } from "@/components/stato";
 import { aggiornaRuoli, erroreCallable } from "@/lib/callable";
+import { useTasks } from "@/lib/data/tasks";
 import { db } from "@/lib/firebase";
 import { useFesta, type CommissioneConId } from "@/lib/festa-context";
 import { COLORI_COMMISSIONE, formatEuro } from "@/lib/format";
-import { modificaCommissione, puoGestireMembriCommissione } from "@/lib/permissions";
+import { creazioneTask, modificaCommissione, puoGestireMembriCommissione } from "@/lib/permissions";
 import type { Membro, RuoloCommissione } from "@/lib/schemas";
+import { aperto, ordinaPerScadenza } from "@/lib/tasks";
 import { cn, senza } from "@/lib/utils";
 
 export default function CommissionePage() {
@@ -84,7 +88,7 @@ function CommissioneDettaglio() {
 
       {!c.generale && <Persone c={c} />}
 
-      <StatoVuoto titolo="Task e spese della commissione">Arriveranno con i prossimi aggiornamenti.</StatoVuoto>
+      <TaskCommissione c={c} />
     </>
   );
 }
@@ -175,5 +179,30 @@ function Persone({ c }: { c: CommissioneConId }) {
         {errore && <Avviso tipo="errore">{errore}</Avviso>}
       </CardContent>
     </Card>
+  );
+}
+
+function TaskCommissione({ c }: { c: CommissioneConId }) {
+  const { festa, festaId, io } = useFesta();
+  const stato = useTasks(festaId);
+  const tipo = creazioneTask(io, festa, c.id);
+  const tasks = stato.stato === "ok" ? ordinaPerScadenza(stato.dati.filter((t) => t.commissioneId === c.id && (aperto(t) || t.stato === "richiesta"))) : [];
+
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="task-commissione">
+      <h2 id="task-commissione" className="text-2xl">Task da chiudere</h2>
+      {stato.stato === "caricamento" && <Caricamento />}
+      {stato.stato === "errore" && <Avviso tipo="errore">Non riesco a caricare i task.</Avviso>}
+      {stato.stato === "ok" && !tasks.length && <StatoVuoto titolo="Niente in sospeso">Questa commissione non ha task aperti.</StatoVuoto>}
+      {tasks.length > 0 && <ListaTask tasks={tasks} />}
+      {tipo && (
+        <Button asChild size="lg" variant="outline">
+          <Link href={`/gestione/f/${festa.slug}/task/nuovo?commissione=${c.id}`}>
+            <Plus aria-hidden />
+            {tipo === "richiesta" ? "Chiedi qualcosa a questa commissione" : "Nuovo task"}
+          </Link>
+        </Button>
+      )}
+    </section>
   );
 }

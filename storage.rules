@@ -1,10 +1,28 @@
 rules_version = '2';
 
+// Stessi permessi di firestore.rules, letti da Firestore.
 service firebase.storage {
   match /b/{bucket}/o {
-    // M0: tutto chiuso. Allegati e scontrini arrivano in M3/M4.
-    match /{allPaths=**} {
-      allow read, write: if false;
+    function isSuperadmin() { return request.auth != null && request.auth.token.get("superadmin", false) == true; }
+    function m(f) { return firestore.get(/databases/(default)/documents/feste/$(f)/membri/$(request.auth.uid)).data; }
+    function isMembro(f) { return request.auth != null && m(f).attivo == true; }
+    function isAdmin(f) { return isSuperadmin() || (isMembro(f) && m(f).ruoloFesta == "admin"); }
+    function scrivibile(f) { return isSuperadmin() || firestore.get(/databases/(default)/documents/feste/$(f)).data.stato != "archiviata"; }
+
+    // Allegati dei task (SPEC 4.4): li vede la festa; li caricano responsabile, referenti e admin.
+    match /feste/{f}/tasks/{t}/{file} {
+      function puoAllegare() {
+        let task = firestore.get(/databases/(default)/documents/feste/$(f)/tasks/$(t)).data;
+        return isAdmin(f)
+          || (isMembro(f) && (m(f).commissioni.get(task.commissioneId, null) == "referente" || task.responsabileUid == request.auth.uid));
+      }
+      allow read: if isSuperadmin() || isMembro(f);
+      allow create: if scrivibile(f) && puoAllegare()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches("image/.*|application/pdf");
+      allow delete: if scrivibile(f) && puoAllegare();
     }
+
+    // Tutto il resto è chiuso.
   }
 }

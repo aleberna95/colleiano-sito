@@ -9,3 +9,4 @@ export {
   impostaSuperadmin,
   nuovaPasswordTemporanea,
 } from "./persone";
+export { storicoTask } from "./tasks";

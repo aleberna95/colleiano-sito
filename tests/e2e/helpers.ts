@@ -46,3 +46,24 @@ export async function creaUtente(opz: {
   });
   return uid;
 }
+
+/** Festa con commissioni Musica (m) e Cucina (c) e i membri indicati, scritta direttamente sull'emulatore. */
+export async function creaFesta(slug: string, membri: { uid: string; nome: string; admin?: boolean; commissioni?: Record<string, "referente" | "componente"> }[]) {
+  const { db } = admin();
+  const audit = { createdAt: FieldValue.serverTimestamp(), createdBy: "test", updatedAt: FieldValue.serverTimestamp(), updatedBy: "test" };
+  const festaId = "festa-e2e";
+  await db.doc(`feste/${festaId}`).set({ nome: "Festa di prova", slug, stato: "preparazione", categorieSpesa: ["Altro"], ...audit });
+  const comm = (nome: string, ordine: number, generale = false) => ({
+    nome, icona: "music", colore: "blu", ordine, generale, referentiUids: [], componentiUids: [], ...audit,
+  });
+  await db.doc(`feste/${festaId}/commissioni/generale`).set(comm("Generale", 0, true));
+  await db.doc(`feste/${festaId}/commissioni/m`).set(comm("Musica", 1));
+  await db.doc(`feste/${festaId}/commissioni/c`).set(comm("Cucina", 2));
+  for (const m of membri) {
+    await db.doc(`feste/${festaId}/membri/${m.uid}`).set({
+      uid: m.uid, nomeVisualizzato: m.nome, telefono: "333 123 4567", ruoloFesta: m.admin ? "admin" : "membro",
+      commissioni: m.commissioni ?? {}, attivo: true, ...audit,
+    });
+  }
+  return festaId;
+}
