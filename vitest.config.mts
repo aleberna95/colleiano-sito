@@ -21,6 +21,17 @@ export default defineConfig({
           testTimeout: 20000,
         },
       },
+      {
+        // Richiedono gli emulatori con le Functions: `pnpm test:functions`
+        extends: true,
+        test: {
+          name: "functions",
+          include: ["tests/functions/**/*.test.ts"],
+          fileParallelism: false,
+          testTimeout: 30000,
+          hookTimeout: 30000,
+        },
+      },
     ],
   },
 });

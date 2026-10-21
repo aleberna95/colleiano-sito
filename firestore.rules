@@ -32,8 +32,78 @@ service cloud.firestore {
         && (!("ultimaFestaId" in request.resource.data) || request.resource.data.ultimaFestaId is string);
     }
 
+    function festa(f) { return get(/databases/$(database)/documents/feste/$(f)).data; }
+    // Festa archiviata: sola lettura, tranne per i superadmin (SPEC 4.6).
+    function scrivibile(f) { return isSuperadmin() || festa(f).stato != "archiviata"; }
+    function auditUpdate() {
+      return request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+    }
+    function auditCreate() {
+      return auditUpdate() && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+    }
+    function optInt(d, k) { return !(k in d) || (d[k] is int && d[k] >= 0); }
+    function optString(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() <= max); }
+
+    // "Le mie feste": ognuno trova i propri documenti membro con una query collection group.
+    match /{path=**}/membri/{uid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     match /feste/{f} {
-      allow read: if isSuperadmin();
+      // Vedere: ogni membro vede tutto della sua festa (SPEC 4.2).
+      allow read: if isMembro(f) || isSuperadmin();
+
+      // Le crea la Function. L'admin modifica i dati; solo il superadmin archivia o riapre.
+      allow update: if auditUpdate()
+        && changedOnly(["nome", "dataFesta", "luogo", "stato", "budgetTotaleCents", "categorieSpesa", "updatedAt", "updatedBy"])
+        && request.resource.data.nome is string && request.resource.data.nome.size() >= 3 && request.resource.data.nome.size() <= 80
+        && (!("dataFesta" in request.resource.data) || request.resource.data.dataFesta is timestamp)
+        && optString(request.resource.data, "luogo", 120)
+        && optInt(request.resource.data, "budgetTotaleCents")
+        && request.resource.data.categorieSpesa is list && request.resource.data.categorieSpesa.size() <= 30
+        && request.resource.data.stato in ["preparazione", "in_corso", "conclusa", "archiviata"]
+        && (isSuperadmin()
+          || (isAdmin(f) && resource.data.stato != "archiviata" && request.resource.data.stato != "archiviata"));
+
+      // Scritti solo dalle Functions (SPEC 4.6).
+      match /membri/{uid} {
+        allow read: if isMembro(f) || isSuperadmin();
+      }
+
+      match /storico/{id} {
+        allow read: if isMembro(f) || isSuperadmin();
+      }
+
+      function commissioneValida(d) {
+        return d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 40
+          && d.colore in ["giallo", "arancio", "viola", "verde", "rosso", "blu", "teal", "grigio"]
+          && d.icona is string && d.icona.size() <= 40
+          && d.ordine is int
+          && optInt(d, "budgetCents")
+          && optString(d, "descrizione", 500);
+      }
+
+      // Commissioni: le crea e modifica l'admin; i referenti solo la descrizione (SPEC 4.6).
+      // referentiUids/componentiUids li allinea la Function dai ruoli dei membri.
+      match /commissioni/{c} {
+        allow read: if isMembro(f) || isSuperadmin();
+        allow create: if isAdmin(f) && scrivibile(f) && auditCreate()
+          && request.resource.data.keys().hasOnly(["nome", "descrizione", "icona", "colore", "ordine", "generale", "budgetCents",
+               "referentiUids", "componentiUids", "createdAt", "createdBy", "updatedAt", "updatedBy"])
+          && commissioneValida(request.resource.data)
+          && request.resource.data.generale == false
+          && request.resource.data.referentiUids == []
+          && request.resource.data.componentiUids == [];
+        allow update: if scrivibile(f) && auditUpdate() && (
+          (isAdmin(f)
+            && changedOnly(["nome", "descrizione", "icona", "colore", "ordine", "budgetCents", "updatedAt", "updatedBy"])
+            && commissioneValida(request.resource.data)
+            && (resource.data.generale == false || request.resource.data.nome == resource.data.nome))
+          || (isReferente(f, c)
+            && changedOnly(["descrizione", "updatedAt", "updatedBy"])
+            && optString(request.resource.data, "descrizione", 500))
+        );
+      }
     }
   }
 }

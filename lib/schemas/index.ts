@@ -7,3 +7,4 @@ export * from "./task";
 export * from "./movimento";
 export * from "./rimborso";
 export * from "./storico";
+export * from "./callable";

@@ -10,10 +10,11 @@
     "typecheck": "next typegen && tsc --noEmit && pnpm --dir functions typecheck",
     "test": "vitest run --project unit",
     "test:rules": "firebase emulators:exec --only firestore --project demo-colleiano \"vitest run --project rules\"",
-    "emulators": "pnpm --dir functions build && firebase emulators:start --project demo-colleiano",
+    "emulators": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:start --project demo-colleiano",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "bootstrap:superadmin": "tsx scripts/bootstrap-superadmin.ts",
-    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-colleiano \"playwright test\""
+    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-colleiano \"playwright test\"",
+    "test:functions": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"vitest run --project functions\""
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -39,6 +40,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "firebase-admin": "^14.5.0",
