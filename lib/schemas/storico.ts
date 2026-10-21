@@ -29,23 +29,41 @@ function confrontabile(v: unknown): unknown {
 /** Valore da salvare nello storico: per checklist e link basta il conteggio. */
 function riassunto(campo: string, v: unknown): unknown {
   if (campo === "checklist" && Array.isArray(v)) return `${v.filter((x) => x?.fatto).length}/${v.length}`;
-  if (campo === "link" && Array.isArray(v)) return v.length;
+  if ((campo === "link" || campo === "scontrini") && Array.isArray(v)) return v.length;
   return v ?? null;
 }
 
-/** Voce di storico per una scrittura su un task (la usa il trigger delle Functions). null = niente da registrare. */
-export function vocePerTask(
-  prima: ValoriTask | undefined,
-  dopo: ValoriTask,
-): { azione: string; diff?: Record<string, DiffCampo> } | null {
-  if (!prima) return { azione: dopo.stato === "richiesta" ? "richiesta" : "creato" };
+type Voce = { azione: string; diff?: Record<string, DiffCampo> };
+
+function differenze(campi: readonly string[], prima: Record<string, unknown>, dopo: Record<string, unknown>) {
   const diff: Record<string, DiffCampo> = {};
-  for (const campo of CAMPI_TASK) {
+  for (const campo of campi) {
     if (confrontabile(prima[campo]) !== confrontabile(dopo[campo])) {
       diff[campo] = { prima: riassunto(campo, prima[campo]), dopo: riassunto(campo, dopo[campo]) };
     }
   }
+  return diff;
+}
+
+/** Voce di storico per una scrittura su un task (la usa il trigger delle Functions). null = niente da registrare. */
+export function vocePerTask(prima: ValoriTask | undefined, dopo: ValoriTask): Voce | null {
+  if (!prima) return { azione: dopo.stato === "richiesta" ? "richiesta" : "creato" };
+  const diff = differenze(CAMPI_TASK, prima, dopo);
   if (!Object.keys(diff).length) return null;
   const azione = diff.stato ? "stato" : diff.responsabileUid ? "assegnato" : diff.commissioneId ? "spostato" : "modificato";
+  return { azione, diff };
+}
+
+const CAMPI_MOVIMENTO = [
+  "commissioneId", "descrizione", "importoCents", "categoria", "dataSpesa", "pagatoDa",
+  "stato", "motivo", "autoApprovata", "rimborsoId", "scontrini", "eliminato",
+] as const;
+
+/** Voce di storico per una scrittura su un movimento. */
+export function vocePerMovimento(prima: Record<string, unknown> | undefined, dopo: Record<string, unknown>): Voce | null {
+  if (!prima) return { azione: "creato" };
+  const diff = differenze(CAMPI_MOVIMENTO, prima, dopo);
+  if (!Object.keys(diff).length) return null;
+  const azione = diff.stato ? "stato" : diff.eliminato ? "ritirato" : "modificato";
   return { azione, diff };
 }

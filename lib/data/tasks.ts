@@ -22,8 +22,8 @@ import type { TaskConId } from "@/lib/tasks";
 
 export type Caricato<T> = { stato: "caricamento" } | { stato: "errore" } | { stato: "ok"; dati: T };
 
-/** Lista in tempo reale; `trasforma` riceve i documenti con il loro id. */
-function useLista<T>(
+/** Lista in tempo reale, con l'id di ogni documento. */
+export function useLista<T>(
   percorso: string[] | null,
   filtri: [string, unknown][] = [],
   ordina?: (a: T & { id: string }, b: T & { id: string }) => number,

@@ -3,6 +3,12 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
 import type {
   AggiornaRuoliInput,
+  AnnullaMovimentoInput,
+  AnnullaRimborsoInput,
+  DecidiSpeseInput,
+  MovimentoInput,
+  RegistraEntrataInput,
+  RegistraRimborsoInput,
   CreaFestaInput,
   CreaPersonaInput,
   DisattivaPersonaInput,
@@ -28,6 +34,13 @@ export const nuovaPasswordTemporanea = callable<NuovaPasswordInput, Credenziali 
   "nuovaPasswordTemporanea",
 );
 export const impostaSuperadmin = callable<ImpostaSuperadminInput, { ok: true }>("impostaSuperadmin");
+
+export const decidiSpese = callable<DecidiSpeseInput, { ok: true; quante: number }>("decidiSpese");
+export const ripresentaSpesa = callable<MovimentoInput, { ok: true }>("ripresentaSpesa");
+export const annullaMovimento = callable<AnnullaMovimentoInput, { ok: true }>("annullaMovimento");
+export const registraEntrata = callable<RegistraEntrataInput, { movimentoId: string }>("registraEntrata");
+export const registraRimborso = callable<RegistraRimborsoInput, { rimborsoId: string; totaleCents: number }>("registraRimborso");
+export const annullaRimborso = callable<AnnullaRimborsoInput, { ok: true }>("annullaRimborso");
 
 /** Messaggio da mostrare: le Functions rispondono già in italiano. */
 export function erroreCallable(err: unknown): string {

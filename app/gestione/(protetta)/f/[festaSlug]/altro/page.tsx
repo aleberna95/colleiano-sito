@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, KeyRound, Layers, Settings, ShieldCheck, Users } from "lucide-react";
+import { ChevronRight, HandCoins, KeyRound, Layers, Settings, ShieldCheck, Users } from "lucide-react";
 import { TitoloPagina } from "@/components/comuni";
 import { useFesta } from "@/lib/festa-context";
 
@@ -9,6 +9,7 @@ export default function AltroPage() {
   const { festa, io } = useFesta();
   const base = `/gestione/f/${festa.slug}`;
   const voci = [
+    { href: `${base}/rimborsi`, label: "Rimborsi", icona: HandCoins },
     { href: `${base}/commissioni`, label: "Commissioni", icona: Layers },
     { href: `${base}/persone`, label: "Persone", icona: Users },
     { href: `${base}/impostazioni`, label: "Impostazioni della festa", icona: Settings },

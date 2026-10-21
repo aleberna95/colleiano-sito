@@ -10,5 +10,9 @@ export const rimborsoSchema = auditSchema.extend({
   modalita: z.enum(["contanti", "bonifico", "altro"]),
   data: timestampSchema,
   nota: z.string().optional(),
+  /** Rimborso sbagliato annullato dal superadmin: le spese tornano da rimborsare. */
+  annullato: z.boolean().optional(),
+  motivoAnnullamento: z.string().optional(),
 });
+export const modalitaRimborsoSchema = rimborsoSchema.shape.modalita;
 export type Rimborso = z.infer<typeof rimborsoSchema>;

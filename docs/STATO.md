@@ -10,6 +10,7 @@
   **Da fare da Alessio**: (1) prova di M1/M2/M3 in produzione con la checklist data in chat (Claude non ha la password del superadmin);
   (2) fatto il 21/10/2026: policy di pulizia delle immagini delle Functions:
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
+  M4: da pubblicare con `pnpm exec firebase deploy --only firestore,storage,functions --project prod` PRIMA del push su `main` (App Hosting pubblica la UI a ogni push).
   M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Da verificare: caricamento di un allegato (le regole di Storage leggono Firestore e potrebbero richiedere un permesso IAM in più).
 
 ## Fase 1
@@ -18,8 +19,8 @@
 | M0 Fondamenta | ✅ |
 | M1 Accesso | ✅ in codice e test (manca la prova in produzione, dopo il punto 6) |
 | M2 Feste, persone, commissioni | ✅ in codice e test (prova in produzione dopo il punto 6) |
-| M3 Task | ✅ in codice e test (prova in produzione da fare) |
-| M4 Spese e rimborsi | – |
+| M3 Task | ✅ in codice e test, pubblicata (prova in produzione da fare) |
+| M4 Spese e rimborsi | ✅ in codice e test (vedi sotto per deploy) |
 | M5 Rifinitura e deploy | – |
 
 ### M1
@@ -40,8 +41,16 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - Dati: `lib/data/tasks.ts` (hook in tempo reale + scritture), `lib/tasks.ts` (stati, filtri, ordinamento, scadenze).
 - e2e `tests/e2e/tasks.spec.ts` (festa scritta direttamente sull'emulatore da `creaFesta` in `tests/e2e/helpers.ts`). Verde.
 
-### Prossimo passo: M4 (Spese, approvazioni, rimborsi, CSV)
-SPEC 4.5, 4.7 n.9-11, 5 (movimenti, rimborsi), 6.2 n.4 ("I miei soldi" e "spese da approvare" in Da gestire), 6.4, 6.6 (WhatsApp spese). Callable per approva/rifiuta/annulla/rimborsa, scontrini in Storage, trigger storico movimenti, e2e: spesa anticipata → approvata → rimborsata, saldo giusto.
+### M4
+- Regole (`firestore.rules`): il client crea solo spese `in_attesa` (mai `stato`, `motivo`, `approvatoDa`, `approvatoAt`, `autoApprovata`, `rimborsoId`), sulle sue commissioni o su Generale (admin ovunque); categoria tra `festa.categorieSpesa`; `pagatoDa` = cassa, oppure anticipata da un membro attivo (`beneficiarioUid`) o da un nome scritto a mano (`beneficiarioNome`). Modifica e ritiro (`eliminato`) solo in `in_attesa`/`rifiutata`, da autore, referenti della commissione, admin. `rimborsi` solo Functions. Scontrini in Storage `feste/{f}/movimenti/{id}/{file}` (carica chiunque della festa, solo foto/PDF < 10 MB; toglie autore o admin). Test `tests/rules/spese.test.ts` con parità (63 test regole verdi).
+- Functions (`functions/src/spese.ts`): `decidiSpese` (approva/rifiuta anche più spese; mai la propria = autore o beneficiario; eccezione: un solo superadmin attivo e nessun altro admin nella festa → `autoApprovata: true`), `ripresentaSpesa` (rifiutata → in attesa), `annullaMovimento` (admin, motivo, approvata non rimborsata), `registraEntrata` (admin, già approvata), `registraRimborso` (admin, una persona, solo anticipate approvate, totale calcolato dal server), `annullaRimborso` (superadmin, motivo: le spese tornano approvate), trigger `storicoMovimento`. Test `tests/functions/spese.test.ts`.
+- Calcoli in `lib/spese.ts`: riepilogo (saldo = entrate − spese approvate, comprese le rimborsate), `crediti` ("chi deve ricevere quanto", chiave `u:<uid>` o `n:<nome>` da `chiaveBeneficiario` in `lib/schemas/movimento.ts`), CSV (`;`, virgola decimale, BOM), storico in parole semplici. Test unitari.
+- UI: `/spese` (riepilogo, filtri per stato e commissione, CSV; per l'admin Da approvare / Rimborsi / Registra un'entrata), `/spese/nuova` (foto → importo → cosa → commissione → chi ha pagato Cassa/Io/Un'altra persona → invia; poi "Avvisa" gli admin), `/spese/[movId]` (approva/rifiuta, modifica, ritira, ripresenta, annulla, scontrino, storico, Condividi), `/spese/da-approvare` (caselle + Approva/Rifiuta insieme), `/spese/entrata`, `/rimborsi` e `/rimborsi/[chiave]` (Rimborsa: spese, modalità, data; annulla rimborso per superadmin; CSV). "Le mie cose": spese da approvare in Da gestire, "I miei soldi" con "Devi ricevere". Pagina commissione: spese e totale approvato.
+- e2e `tests/e2e/spese.spec.ts`: spesa anticipata → approvata → entrata → rimborsata, saldo giusto.
+- Attenzione: le callable trasformano `undefined` in `null` e Zod lo rifiuta: i campi facoltativi vuoti non si mandano proprio.
+
+### Prossimo passo: M5 (Rifinitura e deploy)
+SPEC 9.1 e roadmap M5: PWA (manifest con scope `/gestione/`, Serwist, solo app shell), persistenza offline di Firestore + indicatore "Sei offline", istruzioni per installare su iPhone/Android al primo accesso, controllo accessibilità e 375px su tutte le pagine, `scripts/seed-emulator.ts` (dati finti solo emulatore, bloccato in produzione), deploy finale "prod online con il solo superadmin".
 
 ## Decisioni prese durante lo sviluppo
 - Pages: al PUT aggiunto `cname=colleiano.it`.
@@ -62,6 +71,7 @@ SPEC 4.5, 4.7 n.9-11, 5 (movimenti, rimborsi), 6.2 n.4 ("I miei soldi" e "spese 
 - PC con 8 GB di RAM (spesso <1 GB liberi): test lenti, a volte crash della build. Chiudere programmi pesanti prima di `pnpm test:e2e`.
 - `gh` in `C:\Program Files\GitHub CLI\gh.exe`, non ancora nel PATH del terminale di VS Code (riavviare il PC).
 - Le sessioni lunghe di Claude si sono interrotte durante comandi lunghi: lanciare e2e/functions test in background, uno alla volta (due `test:rules` insieme si pestano le porte).
+- `pnpm test:functions` con poca RAM: a volte l'emulatore non avvia il processo di una Function ("socket hang up", "Failed to load function") e un test va in timeout. Non è il codice: rilanciare (la CI su GitHub è il riferimento).
 - `pnpm test:rules` ora avvia due JVM (Firestore + Storage): con <1 GB libero l'emulatore a volte muore per memoria (`hs_err_pid*.log` nella root, da cancellare). Basta rilanciare. `JAVA_TOOL_OPTIONS` non si può usare: il messaggio "Picked up..." manda in errore le regole di Storage.
 
 ## Comandi

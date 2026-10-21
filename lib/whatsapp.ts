@@ -70,4 +70,28 @@ export const testi = {
     `Stato: ${p.stato}\n` +
     `Chi se ne occupa: ${p.responsabile}${conScadenza(p.scadenza)}\n\n` +
     `${p.link}`,
+
+  spesaInviata: (p: { nome: string; descrizione: string; importo: string; link: string }) =>
+    `Ciao ${p.nome}! Ho segnato una spesa da approvare:\n\n` +
+    `${p.descrizione}: ${p.importo}\n\n` +
+    `La trovi qui: ${p.link}`,
+
+  spesaApprovata: (p: { nome: string; descrizione: string; importo: string; anticipata: boolean; link: string }) =>
+    `Ciao ${p.nome}! La spesa "${p.descrizione}" (${p.importo}) è stata approvata.` +
+    (p.anticipata ? `\nTi verrà rimborsata appena possibile.` : "") +
+    `\n\n${p.link}`,
+
+  spesaRifiutata: (p: { nome: string; descrizione: string; importo: string; motivo: string; link: string }) =>
+    `Ciao ${p.nome}! La spesa "${p.descrizione}" (${p.importo}) non è stata approvata.\n` +
+    `Motivo: ${p.motivo}\n\n` +
+    `Puoi correggerla e rimandarla da qui: ${p.link}`,
+
+  rimborsoFatto: (p: { nome: string; importo: string; modalita: string; spese: number }) =>
+    `Ciao ${p.nome}! Ti ho rimborsato ${p.importo} (${p.modalita}) per ${p.spese === 1 ? "1 spesa" : `${p.spese} spese`} della festa. Grazie!`,
+
+  condividiSpesa: (p: { descrizione: string; importo: string; commissione: string; stato: string; link: string }) =>
+    `${p.descrizione}: ${p.importo}\n` +
+    `Commissione: ${p.commissione}\n` +
+    `Stato: ${p.stato}\n\n` +
+    `${p.link}`,
 };

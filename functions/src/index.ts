@@ -10,3 +10,12 @@ export {
   nuovaPasswordTemporanea,
 } from "./persone";
 export { storicoTask } from "./tasks";
+export {
+  annullaMovimento,
+  annullaRimborso,
+  decidiSpese,
+  registraEntrata,
+  registraRimborso,
+  ripresentaSpesa,
+  storicoMovimento,
+} from "./spese";

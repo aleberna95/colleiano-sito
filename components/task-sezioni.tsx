@@ -25,7 +25,7 @@ import { puoCommentare, puoModificareCommento } from "@/lib/permissions";
 import { commentoFormSchema, linkFormSchema, type Allegato, type Storico } from "@/lib/schemas";
 import { NOMI_STATO, type TaskConId } from "@/lib/tasks";
 
-function Sezione({ titolo, icona, children }: { titolo: string; icona: ReactNode; children: ReactNode }) {
+export function Sezione({ titolo, icona, children }: { titolo: string; icona: ReactNode; children: ReactNode }) {
   return (
     <Card>
       <CardHeader>

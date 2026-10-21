@@ -69,3 +69,65 @@ export const commissioneFormSchema = z.object({
   budgetEuro: z.string().trim().regex(/^(\d+([.,]\d{1,2})?)?$/, "Scrivi un importo, es. 150 o 150,50").optional(),
 });
 export type CommissioneForm = z.infer<typeof commissioneFormSchema>;
+
+// ---- Spese e rimborsi (SPEC 4.5, 6.4) ----
+
+const idsSchema = z.array(z.string().min(1)).min(1, "Scegli almeno una spesa").max(100);
+const motivoSchema = z.string().trim().min(3, "Scrivi il motivo").max(500);
+
+/** Importo scritto in euro: "25", "25,50", "25.5". */
+export const importoEuroSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{1,6}([.,]\d{1,2})?$/, "Scrivi l'importo, es. 25 o 25,50")
+  .refine((v) => Number(v.replace(",", ".")) > 0, "L'importo deve essere più di zero");
+
+export const decidiSpeseInput = z.object({
+  festaId: z.string().min(1),
+  movimentiIds: idsSchema,
+  azione: z.enum(["approva", "rifiuta"]),
+  motivo: motivoSchema.optional(),
+});
+export type DecidiSpeseInput = z.infer<typeof decidiSpeseInput>;
+
+export const movimentoInput = z.object({ festaId: z.string().min(1), movimentoId: z.string().min(1) });
+export type MovimentoInput = z.infer<typeof movimentoInput>;
+
+export const annullaMovimentoInput = movimentoInput.extend({ motivo: motivoSchema });
+export type AnnullaMovimentoInput = z.infer<typeof annullaMovimentoInput>;
+
+export const registraEntrataInput = z.object({
+  festaId: z.string().min(1),
+  commissioneId: z.string().min(1),
+  descrizione: z.string().trim().min(1, "Scrivi da dove arrivano i soldi").max(200),
+  importoCents: z.number().int().positive().max(10_000_000),
+  categoria: z.string().trim().min(1).max(60),
+  dataSpesa: dataGiornoSchema,
+});
+export type RegistraEntrataInput = z.infer<typeof registraEntrataInput>;
+
+export const registraRimborsoInput = z.object({
+  festaId: z.string().min(1),
+  movimentiIds: idsSchema,
+  modalita: z.enum(["contanti", "bonifico", "altro"]),
+  data: dataGiornoSchema,
+  nota: z.string().trim().max(300).optional(),
+});
+export type RegistraRimborsoInput = z.infer<typeof registraRimborsoInput>;
+
+export const annullaRimborsoInput = z.object({ festaId: z.string().min(1), rimborsoId: z.string().min(1), motivo: motivoSchema });
+export type AnnullaRimborsoInput = z.infer<typeof annullaRimborsoInput>;
+
+/** Form "Nuova spesa" (scrittura diretta su Firestore, protetta dalle regole). */
+export const spesaFormSchema = z.object({
+  importoEuro: importoEuroSchema,
+  descrizione: z.string().trim().min(1, "Scrivi cosa hai comprato").max(200),
+  commissioneId: z.string().min(1, "Scegli la commissione"),
+  categoria: z.string().min(1),
+  dataSpesa: dataGiornoSchema,
+  chiHaPagato: z.enum(["cassa", "io", "altro"]),
+  /** Con "altro": uid scelto dall'elenco oppure "" e nome scritto a mano. */
+  beneficiarioUid: z.string(),
+  beneficiarioNome: z.string().trim().max(80),
+});
+export type SpesaForm = z.infer<typeof spesaFormSchema>;

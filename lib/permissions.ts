@@ -1,6 +1,6 @@
 // Replica di firestore.rules e dei controlli delle Functions, solo per decidere cosa mostrare.
 // La fonte di verità restano le regole: tests/rules/permissions.test.ts verifica che coincidano.
-import type { Commento, Festa, Membro, RuoloFesta, StatoTask, Task } from "./schemas";
+import type { Commento, Festa, Membro, Movimento, RuoloFesta, StatoTask, Task } from "./schemas";
 
 export type Io = { uid: string; superadmin: boolean; membro?: Membro };
 
@@ -149,3 +149,47 @@ export function puoModificareCommento(
 export function commissioniPerTask<C extends { id: string }>(io: Io, festa: Pick<Festa, "stato">, commissioni: C[]): C[] {
   return commissioni.filter((c) => creazioneTask(io, festa, c.id));
 }
+
+// ---- Spese e rimborsi (SPEC 4.5) ----
+
+type MovimentoPerPermessi = Pick<Movimento, "tipo" | "stato" | "createdBy" | "commissioneId" | "rimborsoId" | "pagatoDa">;
+
+/** Spese sulle commissioni di cui faccio parte o su "Generale"; l'admin ovunque. */
+export function puoInserireSpesa(io: Io, festa: Pick<Festa, "stato">, comm: { id: string; generale: boolean }): boolean {
+  if (!scrivibile(io, festa)) return false;
+  if (isAdmin(io)) return true;
+  const membro = membroAttivo(io);
+  return !!membro && (!!membro.commissioni[comm.id] || comm.generale);
+}
+
+export function commissioniPerSpesa<C extends { id: string; generale: boolean }>(io: Io, festa: Pick<Festa, "stato">, commissioni: C[]): C[] {
+  return commissioni.filter((c) => puoInserireSpesa(io, festa, c));
+}
+
+/** Modificare o ritirare prima dell'approvazione: l'autore, i referenti della commissione, gli admin. */
+export function puoModificareSpesa(io: Io, festa: Pick<Festa, "stato">, m: MovimentoPerPermessi): boolean {
+  if (!scrivibile(io, festa) || m.tipo !== "spesa" || !["in_attesa", "rifiutata"].includes(m.stato)) return false;
+  return (!!membroAttivo(io) && m.createdBy === io.uid) || isAdmin(io) || isReferente(io, m.commissioneId);
+}
+
+export const puoRipresentareSpesa = (io: Io, festa: Pick<Festa, "stato">, m: MovimentoPerPermessi) =>
+  m.stato === "rifiutata" && puoModificareSpesa(io, festa, m);
+
+export const spesaPropria = (io: Io, m: MovimentoPerPermessi) => m.createdBy === io.uid || m.pagatoDa.beneficiarioUid === io.uid;
+
+/**
+ * Approvare o rifiutare: admin, mai la propria spesa. `unicoAdmin`: c'è un solo superadmin e nessun altro admin,
+ * allora può approvare anche le sue (lo decide la Function, qui serve solo per mostrare i pulsanti).
+ */
+export function puoDecidereSpesa(io: Io, festa: Pick<Festa, "stato">, m: MovimentoPerPermessi, unicoAdmin = false): boolean {
+  if (!scrivibile(io, festa) || !isAdmin(io) || m.tipo !== "spesa" || m.stato !== "in_attesa") return false;
+  return !spesaPropria(io, m) || (io.superadmin && unicoAdmin);
+}
+
+export const puoAnnullareMovimento = (io: Io, festa: Pick<Festa, "stato">, m: MovimentoPerPermessi) =>
+  scrivibile(io, festa) && isAdmin(io) && m.stato === "approvata" && !m.rimborsoId;
+
+/** Entrate, budget e rimborsi: admin. */
+export const puoGestireCassa = (io: Io, festa: Pick<Festa, "stato">) => scrivibile(io, festa) && isAdmin(io);
+
+export const puoAnnullareRimborso = (io: Io, festa: Pick<Festa, "stato">) => scrivibile(io, festa) && io.superadmin;

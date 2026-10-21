@@ -247,6 +247,70 @@ service cloud.firestore {
           allow delete: if scrivibile(f) && puoAllegare();
         }
       }
+
+      // ---- Spese e rimborsi (SPEC 4.5) ----
+
+      function commissione(c) { return get(/databases/$(database)/documents/feste/$(f)/commissioni/$(c)).data; }
+
+      // Spese sulle commissioni di cui faccio parte o su "Generale"; l'admin ovunque.
+      function puoSpendereIn(c) {
+        return isAdmin(f) || (isMembro(f) && (ruolo(f, c) != null || commissione(c).generale == true));
+      }
+
+      function pagatoDaValido(p) {
+        return p is map && p.keys().hasOnly(["tipo", "beneficiarioUid", "beneficiarioNome"])
+          && (p.tipo == "cassa"
+            ? p.keys().hasOnly(["tipo"])
+            // Anticipata: una persona della festa oppure un nome scritto a mano.
+            : p.tipo == "anticipata" && (
+                (p.keys().hasOnly(["tipo", "beneficiarioUid", "beneficiarioNome"]) && p.get("beneficiarioUid", null) is string && attivo(p.beneficiarioUid))
+                || (p.keys().hasOnly(["tipo", "beneficiarioNome"]) && p.get("beneficiarioNome", null) is string
+                  && p.beneficiarioNome.size() >= 1 && p.beneficiarioNome.size() <= 80)));
+      }
+
+      function spesaValida(d) {
+        return d.keys().hasOnly(["tipo", "commissioneId", "descrizione", "importoCents", "categoria", "dataSpesa", "pagatoDa",
+               "stato", "motivo", "approvatoDa", "approvatoAt", "autoApprovata", "rimborsoId", "scontrini", "eliminato",
+               "createdAt", "createdBy", "updatedAt", "updatedBy"])
+          && d.tipo == "spesa"
+          && d.commissioneId is string
+          && d.descrizione is string && d.descrizione.size() >= 1 && d.descrizione.size() <= 200
+          && d.importoCents is int && d.importoCents > 0 && d.importoCents <= 10000000
+          && d.categoria in festa(f).categorieSpesa
+          && d.dataSpesa is timestamp
+          && pagatoDaValido(d.pagatoDa)
+          && d.scontrini is list && d.scontrini.size() <= 5
+          && d.eliminato is bool;
+      }
+
+      // Stato, motivo, approvazione e rimborso li scrivono solo le Functions (SPEC 4.6).
+      match /movimenti/{mv} {
+        allow read: if isMembro(f) || isSuperadmin();
+
+        allow create: if scrivibile(f) && auditCreate()
+          && spesaValida(request.resource.data)
+          && request.resource.data.stato == "in_attesa"
+          && request.resource.data.eliminato == false
+          && !request.resource.data.keys().hasAny(["motivo", "approvatoDa", "approvatoAt", "autoApprovata", "rimborsoId"])
+          && commissioneEsiste(request.resource.data.commissioneId)
+          && puoSpendereIn(request.resource.data.commissioneId);
+
+        // Modificare o ritirare (eliminato) prima dell'approvazione: autore, referenti della commissione, admin.
+        allow update: if scrivibile(f) && auditUpdate()
+          && resource.data.tipo == "spesa"
+          && resource.data.stato in ["in_attesa", "rifiutata"]
+          && spesaValida(request.resource.data)
+          && changedOnly(["commissioneId", "descrizione", "importoCents", "categoria", "dataSpesa", "pagatoDa", "scontrini",
+               "eliminato", "updatedAt", "updatedBy"])
+          && ((isMembro(f) && resource.data.createdBy == io()) || canManage(f, resource.data.commissioneId))
+          && (request.resource.data.commissioneId == resource.data.commissioneId
+            || (commissioneEsiste(request.resource.data.commissioneId) && puoSpendereIn(request.resource.data.commissioneId)));
+      }
+
+      // Rimborsi: solo Functions.
+      match /rimborsi/{r} {
+        allow read: if isMembro(f) || isSuperadmin();
+      }
     }
   }
 }

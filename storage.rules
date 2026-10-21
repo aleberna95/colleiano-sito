@@ -23,6 +23,17 @@ service firebase.storage {
       allow delete: if scrivibile(f) && puoAllegare();
     }
 
+    // Scontrini delle spese (SPEC 6.4): la foto si carica prima di inviare la spesa,
+    // quindi basta essere della festa; li tolgono l'autore della spesa e gli admin.
+    match /feste/{f}/movimenti/{mv}/{file} {
+      allow read: if isSuperadmin() || isMembro(f);
+      allow create: if scrivibile(f) && (isSuperadmin() || isMembro(f))
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches("image/.*|application/pdf");
+      allow delete: if scrivibile(f) && (isAdmin(f)
+        || (isMembro(f) && firestore.get(/databases/(default)/documents/feste/$(f)/movimenti/$(mv)).data.createdBy == request.auth.uid));
+    }
+
     // Tutto il resto è chiuso.
   }
 }

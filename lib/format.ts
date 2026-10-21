@@ -69,3 +69,8 @@ export function formatGiorno(ts: TimestampLike | Date): string {
 export function formatQuando(ts: TimestampLike | Date): string {
   return format(inItalia(ts), "d MMM, HH:mm", { locale: it });
 }
+
+/** Oggi, in Italia, per <input type="date">. */
+export function oggiPerInput(): string {
+  return format(inItalia(new Date()), "yyyy-MM-dd");
+}

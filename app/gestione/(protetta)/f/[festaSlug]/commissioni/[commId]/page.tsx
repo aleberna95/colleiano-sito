@@ -4,19 +4,21 @@ import { Suspense, useState } from "react";
 import { useParams } from "next/navigation";
 import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
-import { Plus, UserPlus, X } from "lucide-react";
+import { Plus, Receipt, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Selezione, StatoVuoto, TitoloPagina } from "@/components/comuni";
 import { CommissioneForm } from "@/components/commissione-form";
+import { ListaSpese } from "@/components/spesa-riga";
 import { ListaTask } from "@/components/task-riga";
 import { Avviso, Caricamento } from "@/components/stato";
 import { aggiornaRuoli, erroreCallable } from "@/lib/callable";
+import { useMovimenti } from "@/lib/data/spese";
 import { useTasks } from "@/lib/data/tasks";
 import { db } from "@/lib/firebase";
 import { useFesta, type CommissioneConId } from "@/lib/festa-context";
 import { COLORI_COMMISSIONE, formatEuro } from "@/lib/format";
-import { creazioneTask, modificaCommissione, puoGestireMembriCommissione } from "@/lib/permissions";
+import { creazioneTask, modificaCommissione, puoGestireMembriCommissione, puoInserireSpesa } from "@/lib/permissions";
 import type { Membro, RuoloCommissione } from "@/lib/schemas";
 import { aperto, ordinaPerScadenza } from "@/lib/tasks";
 import { cn, senza } from "@/lib/utils";
@@ -89,6 +91,7 @@ function CommissioneDettaglio() {
       {!c.generale && <Persone c={c} />}
 
       <TaskCommissione c={c} />
+      <SpeseCommissione c={c} />
     </>
   );
 }
@@ -200,6 +203,42 @@ function TaskCommissione({ c }: { c: CommissioneConId }) {
           <Link href={`/gestione/f/${festa.slug}/task/nuovo?commissione=${c.id}`}>
             <Plus aria-hidden />
             {tipo === "richiesta" ? "Chiedi qualcosa a questa commissione" : "Nuovo task"}
+          </Link>
+        </Button>
+      )}
+    </section>
+  );
+}
+
+function SpeseCommissione({ c }: { c: CommissioneConId }) {
+  const { festa, festaId, io } = useFesta();
+  const stato = useMovimenti(festaId);
+  const spese =
+    stato.stato === "ok"
+      ? stato.dati.filter((m) => m.commissioneId === c.id).sort((a, b) => b.dataSpesa.toMillis() - a.dataSpesa.toMillis())
+      : [];
+  const totale = spese
+    .filter((m) => m.tipo === "spesa" && (m.stato === "approvata" || m.stato === "rimborsata"))
+    .reduce((t, m) => t + m.importoCents, 0);
+
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="spese-commissione">
+      <h2 id="spese-commissione" className="text-2xl">Spese</h2>
+      {stato.stato === "caricamento" && <Caricamento />}
+      {stato.stato === "errore" && <Avviso tipo="errore">Non riesco a caricare le spese.</Avviso>}
+      {stato.stato === "ok" && (
+        <p className="text-muted-foreground">
+          Approvate: <strong className="text-colleiano-slate">{formatEuro(totale)}</strong>
+          {c.budgetCents !== undefined && <> su un budget di {formatEuro(c.budgetCents)}</>}
+        </p>
+      )}
+      {stato.stato === "ok" && !spese.length && <StatoVuoto titolo="Nessuna spesa">Le spese di questa commissione compariranno qui.</StatoVuoto>}
+      {spese.length > 0 && <ListaSpese movimenti={spese} />}
+      {puoInserireSpesa(io, festa, c) && (
+        <Button asChild size="lg" variant="outline">
+          <Link href={`/gestione/f/${festa.slug}/spese/nuova?commissione=${c.id}`}>
+            <Receipt aria-hidden />
+            Nuova spesa
           </Link>
         </Button>
       )}
