@@ -62,7 +62,7 @@ test("task, richiesta tra commissioni e 'Le mie cose'", async ({ page }) => {
   await riga.getByRole("link").click();
   await page.getByLabel("Scrivi un commento").fill("Mi servono due persone");
   await page.getByRole("button", { name: "Invia" }).click();
-  await expect(page.getByText("Mi servono due persone")).toBeVisible();
+  await expect(page.getByRole("paragraph").filter({ hasText: "Mi servono due persone" })).toBeVisible();
   await page.getByRole("button", { name: "Fatto" }).click();
   await expect(page.getByText("Ottimo, task fatto!")).toBeVisible();
   await expect(page.getByText("ha cambiato lo stato: Ci sto lavorando → Fatto")).toBeVisible();

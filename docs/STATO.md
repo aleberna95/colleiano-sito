@@ -6,10 +6,11 @@
 - [x] 1-5. Ramo `sito-2026` (Pages pubblica da lì, colleiano.it ok, confermato da Alessio), `main` ripulito in `legacy-site/`, spec in `docs/SPEC.md`.
 - [x] 6. Produzione, progetto Firebase `colleiano` (alias `prod`): app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), Firestore `eur3`, Blaze, Auth email/password, Storage, backend App Hosting, superadmin (passi A-E fatti da Alessio il 21/10/2026).
   Deploy del 21/10/2026: regole/indici + 6 Functions M2 in europe-west1.
-  **Da fare da Alessio**: (1) mandare a Claude l'URL `*.hosted.app` per la prova di M1/M2/M3 in produzione;
-  (2) policy di pulizia delle immagini delle Functions (Claude non ha il permesso):
+  Indirizzo del gestionale: https://colleiano-hub--colleiano.europe-west4.hosted.app/gestione (backend in europe-west4).
+  **Da fare da Alessio**: (1) prova di M1/M2/M3 in produzione con la checklist data in chat (Claude non ha la password del superadmin);
+  (2) fatto il 21/10/2026: policy di pulizia delle immagini delle Functions:
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
-  Dopo M3: `pnpm exec firebase deploy --only firestore,storage,functions --project prod` (al primo deploy di `storage.rules` la CLI chiede di dare a Storage il permesso di leggere Firestore: rispondere sì).
+  M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Da verificare: caricamento di un allegato (le regole di Storage leggono Firestore e potrebbero richiedere un permesso IAM in più).
 
 ## Fase 1
 | Milestone | Stato |
