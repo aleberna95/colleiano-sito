@@ -13,7 +13,6 @@ import {
   Timestamp,
   updateDoc,
   where,
-  type Firestore,
 } from "firebase/firestore";
 import { creaAmbiente } from "./setup";
 import * as perm from "@/lib/permissions";
@@ -54,7 +53,7 @@ async function seed(statoF1: Festa["stato"] = "preparazione") {
   });
 }
 
-const db = (uid: string): Firestore =>
+const db = (uid: string) =>
   uid === "super"
     ? env.authenticatedContext("super", { superadmin: true }).firestore()
     : env.authenticatedContext(uid).firestore();
