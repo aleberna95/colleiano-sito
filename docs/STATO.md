@@ -60,6 +60,7 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 Fase 1 completa in codice. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 
 ## Decisioni prese durante lo sviluppo
+- Nuova persona (decisione di Alessio, 21/10/2026, SPEC 6.5 aggiornata): niente password temporanea; `creaPersona` crea l'account con password casuale invisibile e `devoCambiarePassword: false`, il client manda subito l'email nativa di Firebase (`sendPasswordResetEmail`) per scegliere la password, poi "Avvisa su WhatsApp" (`testi.invito`) e "Rimanda l'email". La password temporanea resta solo come aiuto dalla scheda persona (`nuovaPasswordTemporanea`). Negli e2e `scegliPasswordDaEmail` legge il codice dall'emulatore Auth.
 - Pages: al PUT aggiunto `cname=colleiano.it`.
 - Tailwind 4: token in `app/globals.css`, classi `colleiano-*`. shadcn: primary = forest, secondary = rust; pulsanti/campi 48px, testo 17px.
 - Functions: pacchetto pnpm del workspace, bundle esbuild con `lib/schemas`; runtime Node 24; opzioni globali in `functions/src/setup.ts` importato per primo (altrimenti la regione resta us-central1).

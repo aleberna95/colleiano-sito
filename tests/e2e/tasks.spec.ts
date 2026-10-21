@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { creaFesta, creaUtente, svuotaEmulatori } from "./helpers";
+import { creaFesta, creaUtente, esci, svuotaEmulatori } from "./helpers";
 
 test.beforeEach(async () => {
   await svuotaEmulatori();
@@ -11,11 +11,6 @@ async function entra(page: Page, email: string) {
   await page.getByLabel("Password").fill("password-test");
   await page.getByRole("button", { name: "Entra" }).click();
   await expect(page).toHaveURL(/\/gestione\/f\/prova$/);
-}
-
-async function esci(page: Page) {
-  await page.getByRole("button", { name: "Esci" }).click();
-  await expect(page).toHaveURL(/\/gestione\/login$/);
 }
 
 const utente = (nome: string) =>

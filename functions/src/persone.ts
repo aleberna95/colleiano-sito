@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, type WriteBatch } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
@@ -65,7 +66,10 @@ async function verificaCommissioni(festaId: string, ruoli: Ruoli) {
   }
 }
 
-/** Nuova persona nella festa (SPEC 4.3, 6.5). Restituisce la password temporanea se l'account è nuovo. */
+/**
+ * Nuova persona nella festa (SPEC 4.3, 6.5). Un account nuovo nasce con una password casuale che nessuno vede:
+ * la persona sceglie la sua dal link dell'email di Firebase, che il client fa partire subito dopo.
+ */
 export const creaPersona = onCall(async (req) => {
   const input = valida(creaPersonaInput, req.data);
   const ctx = await contestoFesta(req, input.festaId);
@@ -76,7 +80,7 @@ export const creaPersona = onCall(async (req) => {
   const auth = getAuth();
   const email = input.email.trim().toLowerCase();
   let uid: string;
-  let password: string | undefined;
+  let nuovoAccount = false;
   let profilo: User | undefined;
 
   try {
@@ -88,7 +92,8 @@ export const creaPersona = onCall(async (req) => {
     }
   } catch (err) {
     if ((err as { code?: string }).code !== "auth/user-not-found") throw err;
-    password = passwordTemporanea();
+    nuovoAccount = true;
+    const password = randomBytes(24).toString("base64url");
     uid = (await auth.createUser({ email, password, displayName: `${input.nome} ${input.cognome}` })).uid;
   }
 
@@ -108,7 +113,8 @@ export const creaPersona = onCall(async (req) => {
       telefono: input.telefono,
       superadmin: false,
       attivo: true,
-      devoCambiarePassword: true,
+      // La password la sceglie dall'email: niente cambio obbligato al primo accesso.
+      devoCambiarePassword: false,
       createdAt: ora(),
       createdBy: ctx.uid,
       ...audit,
@@ -137,7 +143,7 @@ export const creaPersona = onCall(async (req) => {
     diff: { ruoloFesta: input.ruoloFesta, commissioni: input.commissioni },
   });
 
-  return { uid, nomeVisualizzato, telefono, email, password, nuovoAccount: !!password };
+  return { uid, nomeVisualizzato, telefono, email, nuovoAccount };
 });
 
 /** Cambia ruolo nella festa e ruoli nelle commissioni (SPEC 4.3). */

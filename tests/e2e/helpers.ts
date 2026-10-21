@@ -1,3 +1,4 @@
+import { expect, type Page } from "@playwright/test";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
@@ -10,6 +11,23 @@ const PROJECT_ID = "demo-colleiano";
 export function admin() {
   if (!getApps().length) initializeApp({ projectId: PROJECT_ID });
   return { auth: getAuth(), db: getFirestore() };
+}
+
+/**
+ * Fa quello che fa la persona con il link dell'email "scegli la password": legge il codice
+ * dall'emulatore Auth e imposta la password.
+ */
+export async function scegliPasswordDaEmail(email: string, password: string) {
+  const r = await fetch(`http://127.0.0.1:9099/emulator/v1/projects/${PROJECT_ID}/oobCodes`);
+  const { oobCodes } = (await r.json()) as { oobCodes: { email: string; requestType: string; oobCode: string }[] };
+  const codice = oobCodes.filter((c) => c.email === email && c.requestType === "PASSWORD_RESET").at(-1);
+  if (!codice) throw new Error(`Nessuna email per scegliere la password inviata a ${email}`);
+  const ok = await fetch("http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=demo-key", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ oobCode: codice.oobCode, newPassword: password }),
+  });
+  if (!ok.ok) throw new Error(`Password non impostata: ${await ok.text()}`);
 }
 
 /** Svuota Auth e Firestore dell'emulatore. */
@@ -66,4 +84,12 @@ export async function creaFesta(slug: string, membri: { uid: string; nome: strin
     });
   }
   return festaId;
+}
+
+/** "Esci" cancella la copia locale dei dati e ricarica la pagina di login: si aspetta il ricaricamento completo. */
+export async function esci(page: Page) {
+  const ricaricata = page.waitForEvent("load");
+  await page.getByRole("button", { name: "Esci" }).click();
+  await ricaricata;
+  await expect(page).toHaveURL(/\/gestione\/login$/);
 }

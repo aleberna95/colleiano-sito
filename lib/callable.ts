@@ -26,7 +26,7 @@ type Credenziali = { email: string; telefono: string; password?: string };
 export const creaFesta = callable<CreaFestaInput, { festaId: string; slug: string }>("creaFesta");
 export const creaPersona = callable<
   CreaPersonaInput,
-  Credenziali & { uid: string; nomeVisualizzato: string; nuovoAccount: boolean }
+  { uid: string; nomeVisualizzato: string; email: string; telefono: string; nuovoAccount: boolean }
 >("creaPersona");
 export const aggiornaRuoli = callable<AggiornaRuoliInput, { ok: true }>("aggiornaRuoli");
 export const disattivaPersona = callable<DisattivaPersonaInput, { ok: true }>("disattivaPersona");

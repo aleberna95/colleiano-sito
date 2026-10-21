@@ -27,12 +27,11 @@ export function linkPagina(percorso: string): string {
 const conScadenza = (scadenza?: string) => (scadenza ? `\nEntro: ${scadenza}` : "");
 
 export const testi = {
-  credenziali: (p: { nome: string; email: string; password: string }) =>
+  invito: (p: { nome: string; email: string }) =>
     `Ciao ${p.nome}! Ti ho aggiunto al gestionale della festa di Colleiano.\n\n` +
-    `Entra da qui: ${indirizzoGestionale()}\n` +
-    `Email: ${p.email}\n` +
-    `Password temporanea: ${p.password}\n\n` +
-    `Al primo accesso ti chiederà di scegliere una password tua.`,
+    `Ti è arrivata un'email a ${p.email} con un link per scegliere la tua password ` +
+    `(se non la trovi, guarda nella cartella spam).\n\n` +
+    `Poi entri da qui: ${indirizzoGestionale()}`,
 
   aggiuntoAllaFesta: (p: { nome: string; festa: string }) =>
     `Ciao ${p.nome}! Ti ho aggiunto alla festa "${p.festa}" nel gestionale di Colleiano.\n` +

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { creaUtente, svuotaEmulatori } from "./helpers";
+import { creaUtente, esci, scegliPasswordDaEmail, svuotaEmulatori } from "./helpers";
 
 test.beforeEach(async () => {
   await svuotaEmulatori();
@@ -10,11 +10,6 @@ async function entra(page: Page, email: string, password: string) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Entra" }).click();
-}
-
-async function esci(page: Page) {
-  await page.getByRole("button", { name: "Esci" }).click();
-  await expect(page).toHaveURL(/\/gestione\/login$/);
 }
 
 async function nuovaPersona(page: Page, dati: { nome: string; email: string; admin?: boolean }) {
@@ -28,9 +23,10 @@ async function nuovaPersona(page: Page, dati: { nome: string; email: string; adm
   if (dati.admin) await page.getByLabel("Ruolo nella festa").selectOption("admin");
   await page.getByRole("button", { name: "Aggiungi" }).click();
   await expect(page.getByRole("heading", { name: `${dati.nome} è nella festa` })).toBeVisible();
-  const whatsapp = page.getByRole("link", { name: "Manda le credenziali su WhatsApp" });
-  await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/393331234567\?text=/);
-  return (await page.locator("strong.font-mono").textContent())!.trim();
+  // Niente password sullo schermo: arriva un'email per sceglierla, e si avvisa su WhatsApp.
+  await expect(page.getByText(`Email inviata a ${dati.email}.`)).toBeVisible();
+  const whatsapp = page.getByRole("link", { name: "Avvisa su WhatsApp" });
+  await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/393331234567\?text=.*email/);
 }
 
 test("il superadmin crea festa e admin; l'admin crea un membro, non un admin", async ({ page }) => {
@@ -44,15 +40,12 @@ test("il superadmin crea festa e admin; l'admin crea un membro, non un admin", a
   await expect(page.getByRole("heading", { name: "Ciao Alessio!" })).toBeVisible();
 
   // Il superadmin crea un admin
-  const passwordAnna = await nuovaPersona(page, { nome: "Anna", email: "anna@test.it", admin: true });
+  await nuovaPersona(page, { nome: "Anna", email: "anna@test.it", admin: true });
   await esci(page);
 
-  // L'admin entra, cambia password e arriva nella festa
-  await entra(page, "anna@test.it", passwordAnna);
-  await page.getByLabel("Password temporanea").fill(passwordAnna);
-  await page.getByLabel("Nuova password (almeno 8 caratteri)").fill("password-anna");
-  await page.getByLabel("Riscrivi la nuova password").fill("password-anna");
-  await page.getByRole("button", { name: "Salva la password" }).click();
+  // L'admin sceglie la password dal link dell'email, entra e arriva direttamente nella festa
+  await scegliPasswordDaEmail("anna@test.it", "password-anna");
+  await entra(page, "anna@test.it", "password-anna");
   await expect(page).toHaveURL(/\/gestione\/f\/festa-di-prova$/);
 
   // L'admin non può scegliere il ruolo Admin: crea solo membri

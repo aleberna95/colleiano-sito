@@ -12,7 +12,7 @@
 2. Si sviluppa **una fase alla volta** (sezione 10). Ora solo la **Fase 1**. La Fase 2 è descritta perché il modello dati non la ostacoli: non implementarla.
 3. **I permessi sono il cuore della Fase 1** (sezione 4). Ogni funzione si consegna con Firestore Security Rules **e** test delle regole sull'emulatore.
 4. **Il sistema nasce vuoto**: in produzione esiste solo il superadmin creato dallo script (sezione 8). Dati finti solo sull'emulatore.
-5. **Nessun servizio email transazionale.** Le comunicazioni passano da **WhatsApp** tramite link `wa.me` precompilati (sezione 6.6). L'unica email che parte è il reset password nativo di Firebase Auth.
+5. **Nessun servizio email transazionale.** Le comunicazioni passano da **WhatsApp** tramite link `wa.me` precompilati (sezione 6.6). L'unica email che parte è il reset password nativo di Firebase Auth (usato anche per far scegliere la password alle persone nuove, 6.5).
 6. Interfaccia in **italiano**. Codice in inglese, ma i nomi di dominio restano in italiano come in questo documento (`festa`, `commissione`, `referente`, `movimento`, `rimborso`, `punto`…).
 7. Utenti non tecnici e non giovani: ogni schermata deve superare il test "lo usa dal telefono senza chiedere aiuto" (sezione 9).
 8. **Grafica**: palette, font, raggi e ombre sono quelli del sito attuale, già riportati nella sezione 9.2. Il sito attuale (HTML statico + Tailwind via CDN, ospitato su GitHub Pages) vive nel ramo `sito-2026` dello stesso repo e ne è copiata una parte in `legacy-site/` **solo come riferimento** grafico e di contenuti: non va modificato né pubblicato da questo progetto. Il setup del repo è nella sezione 8.0.
@@ -271,7 +271,7 @@ In ordine:
 - Export CSV di movimenti e rimborsi.
 
 ### 6.5 Persone e commissioni
-- **Persone**: elenco con ruoli. **Nuova persona**: nome, telefono, email. Il sistema genera una password temporanea e propone **"Manda le credenziali su WhatsApp"**. Al primo accesso la password va cambiata.
+- **Persone**: elenco con ruoli. **Nuova persona**: nome, telefono, email. L'account nasce con una password casuale che nessuno vede e parte l'email nativa di Firebase Auth con il link per **scegliere la propria password** (stesso modello del reset password); poi si propone **"Avvisa su WhatsApp"** ("ti è arrivata un'email, guarda anche nello spam"). Se l'email non arriva: "Rimanda l'email", oppure l'admin genera una password temporanea dalla scheda persona (6.7), che al primo accesso va cambiata. *(Decisione di Alessio del 21/10/2026, al posto delle credenziali su WhatsApp.)*
 - **Commissioni**: card con colore, referenti e componenti. All'interno: task e spese della commissione.
 - Alla creazione di una festa viene creata in automatico la commissione **Generale**.
 
@@ -280,7 +280,7 @@ Nessuna email e nessuna notifica push. Dopo le azioni che riguardano un'altra pe
 - task assegnato o riassegnato → al responsabile
 - richiesta inviata → al referente; richiesta accettata o rifiutata → al richiedente
 - spesa inviata → agli admin; spesa approvata, rifiutata o rimborsata → all'autore o al beneficiario
-- nuova persona → credenziali
+- nuova persona → avviso che è arrivata l'email per scegliere la password
 
 Su ogni task e spesa c'è anche **"Condividi"**, che apre WhatsApp senza destinatario per incollare nel gruppo. I testi stanno tutti in `lib/whatsapp.ts`.
 

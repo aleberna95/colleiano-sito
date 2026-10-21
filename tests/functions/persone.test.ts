@@ -54,12 +54,13 @@ describe("creaFesta", () => {
 
 describe("persone e ruoli (SPEC 4.3, 4.7 n.8)", () => {
   it("il superadmin crea un admin, l'admin crea un membro ma non un admin", async () => {
-    const r = await sa<{ password: string; nuovoAccount: boolean }>("creaPersona", persona(festaId, "anna", { ruoloFesta: "admin" }));
+    const r = await sa<Record<string, unknown>>("creaPersona", persona(festaId, "anna", { ruoloFesta: "admin" }));
     expect(r.nuovoAccount).toBe(true);
-    expect(r.password).toMatch(/^[a-z2-9]{4}-[a-z2-9]{4}-[a-z2-9]{4}$/);
+    // La password la sceglie la persona dall'email: nessuno la vede, niente cambio obbligato.
+    expect(r).not.toHaveProperty("password");
     const { db } = admin();
     const anna = await admin().auth.getUserByEmail("anna@test.it");
-    expect((await db.doc(`users/${anna.uid}`).get()).get("devoCambiarePassword")).toBe(true);
+    expect((await db.doc(`users/${anna.uid}`).get()).get("devoCambiarePassword")).toBe(false);
 
     await admin().auth.updateUser(anna.uid, { password: "password-test" });
     const annaCall = await client("anna@test.it");

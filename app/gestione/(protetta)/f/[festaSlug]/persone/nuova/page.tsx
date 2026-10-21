@@ -5,13 +5,15 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { Check, UserPlus } from "lucide-react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { Check, Mail, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Campo } from "@/components/campo";
 import { BottoneWhatsApp, Selezione, TitoloPagina } from "@/components/comuni";
 import { Avviso } from "@/components/stato";
 import { creaPersona, erroreCallable } from "@/lib/callable";
+import { auth } from "@/lib/firebase";
 import { useFesta } from "@/lib/festa-context";
 import { NOMI_RUOLO_FESTA } from "@/lib/format";
 import { puoAggiungerePersone, ruoliFestaAssegnabili } from "@/lib/permissions";
@@ -21,13 +23,25 @@ import { testi } from "@/lib/whatsapp";
 const formSchema = creaPersonaInput.omit({ festaId: true, commissioni: true });
 type Form = z.input<typeof formSchema>;
 type Risultato = Awaited<ReturnType<typeof creaPersona>>;
+type Invio = "inviata" | "errore" | "in_corso";
 
-// Nuova persona: nome, telefono, email (SPEC 6.5). I ruoli nelle commissioni si danno dopo.
+/** Email nativa di Firebase con il link per scegliere la password (SPEC 6.5). */
+async function mandaEmail(email: string): Promise<Invio> {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return "inviata";
+  } catch {
+    return "errore";
+  }
+}
+
+// Nuova persona: nome, telefono, email (SPEC 6.5). Riceve un'email per scegliere la password; i ruoli si danno dopo.
 export default function NuovaPersonaPage() {
   const { festa, festaId, io } = useFesta();
   const base = `/gestione/f/${festa.slug}`;
   const [errore, setErrore] = useState<string>();
   const [fatto, setFatto] = useState<Risultato>();
+  const [invio, setInvio] = useState<Invio>();
   const ruoli = ruoliFestaAssegnabili(io);
 
   const form = useForm<Form>({
@@ -43,7 +57,9 @@ export default function NuovaPersonaPage() {
   const onSubmit = form.handleSubmit(async (v) => {
     setErrore(undefined);
     try {
-      setFatto(await creaPersona({ ...v, ruoloFesta: v.ruoloFesta ?? "membro", festaId, commissioni: {} }));
+      const r = await creaPersona({ ...v, ruoloFesta: v.ruoloFesta ?? "membro", festaId, commissioni: {} });
+      setFatto(r);
+      if (r.nuovoAccount) setInvio(await mandaEmail(r.email));
     } catch (err) {
       setErrore(erroreCallable(err));
     }
@@ -60,27 +76,34 @@ export default function NuovaPersonaPage() {
               <h2>{nome} è nella festa</h2>
             </CardTitle>
             <CardDescription>
-              {fatto.password
-                ? "Mandale le credenziali su WhatsApp: al primo accesso sceglierà la sua password."
+              {fatto.nuovoAccount
+                ? `Le arriva un'email a ${fatto.email} con un link per scegliere la sua password. Avvisala anche su WhatsApp.`
                 : "Aveva già un account: può entrare con le sue solite credenziali."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {fatto.password && (
-              <p className="rounded-md bg-muted p-3">
-                Password temporanea: <strong className="font-mono text-lg">{fatto.password}</strong>
-              </p>
+            {fatto.nuovoAccount && invio === "inviata" && <Avviso tipo="ok">Email inviata a {fatto.email}.</Avviso>}
+            {fatto.nuovoAccount && invio === "errore" && (
+              <Avviso tipo="errore">Non sono riuscito a mandare l&apos;email. Riprova con il pulsante qui sotto.</Avviso>
             )}
             <BottoneWhatsApp
               telefono={fatto.telefono}
-              testo={
-                fatto.password
-                  ? testi.credenziali({ nome, email: fatto.email, password: fatto.password })
-                  : testi.aggiuntoAllaFesta({ nome, festa: festa.nome })
-              }
-            >
-              {fatto.password ? "Manda le credenziali su WhatsApp" : "Avvisa su WhatsApp"}
-            </BottoneWhatsApp>
+              testo={fatto.nuovoAccount ? testi.invito({ nome, email: fatto.email }) : testi.aggiuntoAllaFesta({ nome, festa: festa.nome })}
+            />
+            {fatto.nuovoAccount && (
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={invio === "in_corso"}
+                onClick={async () => {
+                  setInvio("in_corso");
+                  setInvio(await mandaEmail(fatto.email));
+                }}
+              >
+                <Mail aria-hidden />
+                {invio === "in_corso" ? "Invio..." : "Rimanda l'email"}
+              </Button>
+            )}
             <Button asChild variant="outline" size="lg">
               <Link href={`${base}/persone/${fatto.uid}`}>Assegna le commissioni</Link>
             </Button>
@@ -90,6 +113,7 @@ export default function NuovaPersonaPage() {
               onClick={() => {
                 form.reset();
                 setFatto(undefined);
+                setInvio(undefined);
               }}
             >
               <UserPlus aria-hidden />
