@@ -4,16 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm build:sw && next build",
+    "build:sw": "esbuild sw/gestione.ts --bundle --minify --format=iife --target=es2022 --outfile=public/gestione/sw.js",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit && pnpm --dir functions typecheck",
+    "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p sw && pnpm --dir functions typecheck",
     "test": "vitest run --project unit",
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-colleiano \"vitest run --project rules\"",
     "emulators": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:start --project demo-colleiano",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "bootstrap:superadmin": "tsx scripts/bootstrap-superadmin.ts",
-    "test:e2e": "pnpm --dir functions build && cross-env NEXT_PUBLIC_USE_EMULATORS=true next build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"playwright test\"",
+    "seed": "tsx scripts/seed-emulator.ts",
+    "test:e2e": "pnpm --dir functions build && pnpm build:sw && cross-env NEXT_PUBLIC_USE_EMULATORS=true next build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"playwright test\"",
     "test:functions": "pnpm --dir functions build && cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano \"vitest run --project functions\""
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
@@ -41,10 +44,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cross-env": "^10.1.0",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "firebase-admin": "^14.5.0",
     "firebase-tools": "^15.34.0",
+    "serwist": "9.5.13",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

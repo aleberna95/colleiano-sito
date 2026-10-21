@@ -17,8 +17,8 @@ export const CLASSI_STATO: Record<StatoTask, string> = {
   richiesta: "border-colleiano-rust/40 bg-colleiano-rust/10 text-colleiano-rust",
   da_fare: "border-colleiano-forest/25 bg-colleiano-forest/5 text-colleiano-forest",
   in_corso: "border-blue-300 bg-blue-50 text-blue-900",
-  bloccato: "border-colleiano-danger/40 bg-colleiano-danger/10 text-colleiano-danger",
-  fatto: "border-colleiano-success/40 bg-colleiano-success/10 text-colleiano-success",
+  bloccato: "border-red-300 bg-red-50 text-red-900",
+  fatto: "border-green-300 bg-green-50 text-green-900",
   annullato: "border-stone-300 bg-stone-100 text-stone-700",
 };
 

@@ -1,6 +1,15 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { connectAuthEmulator, getAuth } from "firebase/auth";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectAuthEmulator, getAuth, signOut } from "firebase/auth";
+import {
+  clearIndexedDbPersistence,
+  connectFirestoreEmulator,
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  terminate,
+  type Firestore,
+} from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 
@@ -36,7 +45,32 @@ function createApp(): FirebaseApp {
 
 export const app = createApp();
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+/** Nel browser i dati restano sul telefono: si consulta e si scrive anche senza rete (SPEC 9.1). */
+function createDb(): Firestore {
+  if (typeof window === "undefined") return getFirestore(app);
+  try {
+    return initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    // Già inizializzato (ricaricamento a caldo in sviluppo).
+    return getFirestore(app);
+  }
+}
+
+export const db = createDb();
+
+/** Esci e cancella i dati della festa salvati sul telefono (che può essere di qualcun altro). */
+export async function esci() {
+  await signOut(auth);
+  try {
+    await terminate(db);
+    await clearIndexedDbPersistence(db);
+  } catch {
+    // Se non si riesce a cancellare la copia locale, l'uscita vale comunque.
+  }
+  // Ricaricamento completo: Firestore è chiuso e va riaperto da zero.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign("/gestione/login");
+}
 export const storage = getStorage(app);
 export const functions = getFunctions(app, REGION);
 

@@ -21,7 +21,7 @@
 | M2 Feste, persone, commissioni | ✅ in codice e test (prova in produzione dopo il punto 6) |
 | M3 Task | ✅ in codice e test, pubblicata (prova in produzione da fare) |
 | M4 Spese e rimborsi | ✅ in codice e test, pubblicata (prova in produzione da fare) |
-| M5 Rifinitura e deploy | – |
+| M5 Rifinitura e deploy | ✅ in codice e test (manca la prova in produzione di Alessio) |
 
 ### M1
 Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cambio password obbligato al primo accesso, area superadmin `/gestione/admin`, `scripts/bootstrap-superadmin.ts` (idempotente, provato sull'emulatore). e2e Playwright in `tests/e2e/accesso.spec.ts`.
@@ -49,8 +49,15 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - e2e `tests/e2e/spese.spec.ts`: spesa anticipata → approvata → entrata → rimborsata, saldo giusto.
 - Attenzione: le callable trasformano `undefined` in `null` e Zod lo rifiuta: i campi facoltativi vuoti non si mandano proprio.
 
-### Prossimo passo: M5 (Rifinitura e deploy)
-SPEC 9.1 e roadmap M5: PWA (manifest con scope `/gestione/`, Serwist, solo app shell), persistenza offline di Firestore + indicatore "Sei offline", istruzioni per installare su iPhone/Android al primo accesso, controllo accessibilità e 375px su tutte le pagine, `scripts/seed-emulator.ts` (dati finti solo emulatore, bloccato in produzione), deploy finale "prod online con il solo superadmin".
+### M5
+- PWA del gestionale: `public/gestione/manifest.webmanifest` (scope `/gestione/`, icone in `public/gestione/` generate dal logo), metadata in `app/gestione/layout.tsx`. Service worker scritto con `serwist` in `sw/gestione.ts`, compilato da `pnpm build:sw` (lo fanno già `pnpm build` e `pnpm test:e2e`) in `public/gestione/sw.js` (ignorato da git): solo app shell (pagine `/gestione` NetworkFirst, `/_next/static` CacheFirst, risorse StaleWhileRevalidate); registrato solo in produzione da `RegistraServiceWorker`. Scartato `@serwist/turbopack`: la sua route usa `dynamic`/`revalidate`, non compatibili con Cache Components, e servirebbe da `/serwist/`, fuori scope.
+- Offline: Firestore con `persistentLocalCache` (multi-tab) in `lib/firebase.ts`; avviso "Sei offline" (`AvvisoOffline`); "Esci" (`esci()` in `lib/firebase.ts`) cancella anche la copia locale.
+- Istruzioni per installare (iPhone/Android, o pulsante "Installa" se il browser lo offre) in "Le mie cose" finché non si chiudono (`localStorage`).
+- `scripts/seed-emulator.ts` (`pnpm seed`, con `pnpm emulators` acceso): svuota l'emulatore e crea festa, 6 persone (`<nome>@colleiano.test`, password `password-prova`), commissioni, task e spese. Funziona solo sugli emulatori.
+- Accessibilità: `tests/e2e/accessibilita.spec.ts` apre 19 pagine a 375px, controlla axe (WCAG A/AA, nessun problema serio), niente scorrimento orizzontale, e salva le schermate in `test-results/schermate/`. Corretti i contrasti dei badge di stato e degli avvisi arancioni.
+
+### Prossimo passo
+Fase 1 completa in codice. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 
 ## Decisioni prese durante lo sviluppo
 - Pages: al PUT aggiunto `cname=colleiano.it`.

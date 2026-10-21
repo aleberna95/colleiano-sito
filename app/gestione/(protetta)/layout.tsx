@@ -4,11 +4,11 @@ import { Suspense, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AvvisoOffline } from "@/components/pwa";
 import { Caricamento } from "@/components/stato";
-import { auth } from "@/lib/firebase";
+import { esci } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { FesteProvider } from "@/lib/feste-context";
 
@@ -50,12 +50,13 @@ function Protetta({ children }: { children: React.ReactNode }) {
             <span className="font-heading text-xl font-semibold text-colleiano-forest">Colleiano</span>
           </Link>
           <span className="ml-auto hidden truncate text-muted-foreground sm:inline">{nome}</span>
-          <Button variant="ghost" onClick={() => signOut(auth)} className="ml-auto sm:ml-0">
+          <Button variant="ghost" onClick={() => void esci()} className="ml-auto sm:ml-0">
             <LogOut aria-hidden />
             Esci
           </Button>
         </div>
       </header>
+      <AvvisoOffline />
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6">
         <FesteProvider>{children}</FesteProvider>
       </main>

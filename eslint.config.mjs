@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "legacy-site/**",
     "functions/lib/**",
+    "public/gestione/sw.js",
   ]),
 ]);
 

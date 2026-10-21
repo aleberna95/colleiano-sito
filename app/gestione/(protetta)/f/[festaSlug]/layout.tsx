@@ -77,7 +77,7 @@ function SelettoreFesta() {
         <p className="font-heading text-lg text-colleiano-forest">{festa.nome}</p>
       )}
       {festa.stato === "archiviata" && (
-        <p className="flex items-center gap-2 rounded-md bg-colleiano-warning/10 p-3 text-colleiano-warning">
+        <p className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
           <Archive className="size-5" aria-hidden />
           Festa archiviata: si può solo consultare.
         </p>

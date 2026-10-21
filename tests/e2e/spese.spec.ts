@@ -66,7 +66,7 @@ test("spesa anticipata → approvata → rimborsata, saldo giusto", async ({ pag
 
   // Rimborso: chi deve ricevere quanto
   await page.getByRole("link", { name: "Rimborsi", exact: true }).click();
-  await page.getByRole("link", { name: /Luca/ }).click();
+  await page.getByRole("link", { name: /^Luca Anticipato/ }).click();
   await expect(voce(page, "Da ricevere")).toContainText("25,50");
   await page.getByRole("button", { name: "Rimborsa" }).click();
   await page.getByRole("button", { name: /Registra il rimborso di 25,50/ }).click();

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatoVuoto } from "@/components/comuni";
 import { Avviso, Caricamento } from "@/components/stato";
+import { IstruzioniInstallazione } from "@/components/pwa";
 import { ListaSpese } from "@/components/spesa-riga";
 import { ListaTask } from "@/components/task-riga";
 import { useUtente } from "@/lib/auth-context";
@@ -58,6 +59,7 @@ export default function LeMieCose() {
   return (
     <>
       <h1 className="text-3xl">Ciao {profilo?.nome}!</h1>
+      <IstruzioniInstallazione />
 
       {stato.stato === "caricamento" && <Caricamento />}
       {stato.stato === "errore" && <Avviso tipo="errore">Non riesco a caricare i task. Controlla la connessione e riprova.</Avviso>}

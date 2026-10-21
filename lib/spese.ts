@@ -12,9 +12,9 @@ export const NOMI_STATO_SPESA: Record<StatoMovimento, string> = {
 };
 
 export const CLASSI_STATO_SPESA: Record<StatoMovimento, string> = {
-  in_attesa: "border-colleiano-warning/40 bg-colleiano-warning/10 text-colleiano-warning",
-  approvata: "border-colleiano-success/40 bg-colleiano-success/10 text-colleiano-success",
-  rifiutata: "border-colleiano-danger/40 bg-colleiano-danger/10 text-colleiano-danger",
+  in_attesa: "border-amber-300 bg-amber-50 text-amber-900",
+  approvata: "border-green-300 bg-green-50 text-green-900",
+  rifiutata: "border-red-300 bg-red-50 text-red-900",
   rimborsata: "border-blue-300 bg-blue-50 text-blue-900",
   annullata: "border-stone-300 bg-stone-100 text-stone-700",
 };

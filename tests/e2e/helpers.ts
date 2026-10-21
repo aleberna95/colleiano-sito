@@ -7,7 +7,7 @@ process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
 
 const PROJECT_ID = "demo-colleiano";
 
-function admin() {
+export function admin() {
   if (!getApps().length) initializeApp({ projectId: PROJECT_ID });
   return { auth: getAuth(), db: getFirestore() };
 }

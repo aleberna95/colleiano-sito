@@ -87,7 +87,7 @@ export function Checklist({ task, puo }: { task: TaskConId; puo: boolean }) {
       )}
       {puo && (
         <form
-          className="flex gap-2"
+          className="flex flex-col gap-2 sm:flex-row"
           onSubmit={async (e) => {
             e.preventDefault();
             const testo = nuova.trim();
@@ -101,7 +101,7 @@ export function Checklist({ task, puo }: { task: TaskConId; puo: boolean }) {
             value={nuova}
             maxLength={200}
             onChange={(e) => setNuova(e.target.value)}
-            className="h-12 min-w-0 flex-1 rounded-md border border-input bg-white px-3 text-base"
+            className="h-12 w-full min-w-0 flex-1 rounded-md border border-input bg-white px-3 text-base"
           />
           <Button type="submit" size="lg" variant="outline" disabled={!nuova.trim()}>
             <Plus aria-hidden />
