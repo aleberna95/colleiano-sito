@@ -57,7 +57,7 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - Accessibilità: `tests/e2e/accessibilita.spec.ts` apre 19 pagine a 375px, controlla axe (WCAG A/AA, nessun problema serio), niente scorrimento orizzontale, e salva le schermate in `test-results/schermate/`. Corretti i contrasti dei badge di stato e degli avvisi arancioni.
 
 ### Prossimo passo
-Fase 1 completa in codice. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
+Fase 1 completa e provata in produzione da Alessio il 22/10/2026 (task, allegati, spese con scontrino). Commissioni del comitato inserite nella "Festa di Luglio 2027" (le persone le aggiunge Alessio). Ora: test con 2-3 admin (Antonio da nominare secondo superadmin da Altro → Account e feste); raccogliere le segnalazioni e correggere. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 
 ## Decisioni prese durante lo sviluppo
 - Nuova persona (decisione di Alessio, 21/10/2026, SPEC 6.5 aggiornata): niente password temporanea; `creaPersona` crea l'account con password casuale invisibile e `devoCambiarePassword: false`, il client manda subito l'email nativa di Firebase (`sendPasswordResetEmail`) per scegliere la password, poi "Avvisa su WhatsApp" (`testi.invito`) e "Rimanda l'email". La password temporanea resta solo come aiuto dalla scheda persona (`nuovaPasswordTemporanea`). Negli e2e `scegliPasswordDaEmail` legge il codice dall'emulatore Auth.
