@@ -72,7 +72,15 @@ export default function FesteSitoPage() {
             size="lg"
             disabled={inCorso !== undefined || evidenza === (config.dati.festaInEvidenzaId ?? "")}
             onClick={() =>
-              esegui("evidenza", () => salvaSitoConfig(io.uid, { ...config.dati, festaInEvidenzaId: evidenza || undefined }), "Festa in evidenza salvata.")
+              esegui(
+                "evidenza",
+                async () => {
+                  await salvaSitoConfig(io.uid, { ...config.dati, festaInEvidenzaId: evidenza || undefined });
+                  // Toccare la festa fa ripartire la copia pubblica (sitoFeste), se ancora non c'è.
+                  if (evidenza) await aggiornaFestaSito(evidenza, io.uid, {});
+                },
+                "Festa in evidenza salvata.",
+              )
             }
           >
             <Check aria-hidden />

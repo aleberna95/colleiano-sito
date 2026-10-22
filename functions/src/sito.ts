@@ -1,4 +1,3 @@
-import { isDeepStrictEqual } from "node:util";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { datiPubbliciFesta } from "../../lib/schemas";
 import { db } from "./util";
@@ -9,13 +8,11 @@ import { db } from "./util";
  */
 export const sitoFesta = onDocumentWritten("feste/{festaId}", async (event) => {
   const ref = db().doc(`sitoFeste/${event.params.festaId}`);
-  const prima = event.data?.before.data();
   const dopo = event.data?.after.data();
   if (!dopo) {
     await ref.delete();
     return;
   }
-  const pubblici = datiPubbliciFesta(dopo as Parameters<typeof datiPubbliciFesta>[0]);
-  if (prima && isDeepStrictEqual(datiPubbliciFesta(prima as Parameters<typeof datiPubbliciFesta>[0]), pubblici)) return;
-  await ref.set(pubblici);
+  // Si riscrive sempre: così basta toccare una festa per creare la copia che manca.
+  await ref.set(datiPubbliciFesta(dopo as Parameters<typeof datiPubbliciFesta>[0]));
 });
