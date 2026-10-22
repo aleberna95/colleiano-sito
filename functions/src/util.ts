@@ -18,7 +18,7 @@ export function valida<T extends z.ZodType>(schema: T, data: unknown): z.infer<T
 
 export function chiamante(req: CallableRequest) {
   if (!req.auth) throw new HttpsError("unauthenticated", "Devi prima entrare nel gestionale.");
-  return { uid: req.auth.uid, superadmin: req.auth.token.superadmin === true };
+  return { uid: req.auth.uid, superadmin: req.auth.token.superadmin === true, proprietario: req.auth.token.proprietario === true };
 }
 
 export function vietato(msg = "Non hai i permessi per farlo."): never {

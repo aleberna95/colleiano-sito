@@ -99,7 +99,7 @@ export default function AdminPage() {
 }
 
 function RigaAccount({ u }: { u: Utente }) {
-  const { user } = useUtente();
+  const { user, proprietario } = useUtente();
   const [errore, setErrore] = useState<string>();
   const [password, setPassword] = useState<string>();
   const [inCorso, setInCorso] = useState(false);
@@ -124,31 +124,35 @@ function RigaAccount({ u }: { u: Utente }) {
           {u.nome} {u.cognome}
           {io && <span className="font-normal text-muted-foreground"> (tu)</span>}
         </span>
-        {u.superadmin && <Etichetta>Superadmin</Etichetta>}
+        {u.proprietario ? <Etichetta>Proprietario</Etichetta> : u.superadmin && <Etichetta>Superadmin</Etichetta>}
         {!u.attivo && <span className="text-colleiano-danger">Disattivato</span>}
       </div>
       <span className="break-all text-muted-foreground">{u.email}</span>
 
-      {u.attivo && !io && (
+      {u.attivo && !io && !u.proprietario && (
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={inCorso}
-            onClick={() => esegui(() => impostaSuperadmin({ uid: u.id, superadmin: !u.superadmin }))}
-          >
-            {u.superadmin ? <ShieldOff aria-hidden /> : <ShieldCheck aria-hidden />}
-            {u.superadmin ? "Togli superadmin" : "Rendi superadmin"}
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={inCorso}
-            onClick={() => esegui(async () => setPassword((await nuovaPasswordTemporanea({ uid: u.id })).password))}
-          >
-            <KeyRound aria-hidden />
-            Nuova password
-          </Button>
+          {proprietario && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={inCorso}
+              onClick={() => esegui(() => impostaSuperadmin({ uid: u.id, superadmin: !u.superadmin }))}
+            >
+              {u.superadmin ? <ShieldOff aria-hidden /> : <ShieldCheck aria-hidden />}
+              {u.superadmin ? "Togli superadmin" : "Rendi superadmin"}
+            </Button>
+          )}
+          {(proprietario || !u.superadmin) && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={inCorso}
+              onClick={() => esegui(async () => setPassword((await nuovaPasswordTemporanea({ uid: u.id })).password))}
+            >
+              <KeyRound aria-hidden />
+              Nuova password
+            </Button>
+          )}
           {!u.superadmin && (
             <ConfermaAzione
               etichetta="Disattiva account"

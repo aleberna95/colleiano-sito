@@ -22,6 +22,7 @@ const { values } = parseArgs({
     telefono: { type: "string" },
     project: { type: "string" },
     emulator: { type: "boolean", default: false },
+    proprietario: { type: "boolean", default: false },
   },
 });
 
@@ -75,7 +76,10 @@ async function main() {
     console.log(`Creato l'utente ${email} (uid ${uid}).`);
   }
 
-  await auth.setCustomUserClaims(uid, { superadmin: true });
+  // Con --proprietario è il superadmin che ha il controllo: solo lui nomina o toglie i superadmin.
+  const proprietario = values.proprietario === true;
+  const { customClaims } = await auth.getUser(uid);
+  await auth.setCustomUserClaims(uid, { ...customClaims, superadmin: true, ...(proprietario && { proprietario: true }) });
 
   const ref = db.doc(`users/${uid}`);
   const esistente = await ref.get();
@@ -87,6 +91,7 @@ async function main() {
       email,
       telefono,
       superadmin: true,
+      ...(proprietario && { proprietario: true }),
       attivo: true,
       ...(esistente.exists ? {} : { devoCambiarePassword: true, createdAt: FieldValue.serverTimestamp(), createdBy: "bootstrap" }),
       updatedAt: FieldValue.serverTimestamp(),

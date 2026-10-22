@@ -13,7 +13,7 @@ let festaId: string;
 
 beforeEach(async () => {
   await svuota();
-  const s = await account("alessio", { superadmin: true });
+  const s = await account("alessio", { superadmin: true, proprietario: true });
   sa = await client(s.email);
   ({ festaId } = await sa<{ festaId: string }>("creaFesta", { nome: "Festa di Colleiano 2027", dataFesta: "2027-08-14" }));
 });
@@ -168,11 +168,32 @@ describe("password e superadmin (SPEC 6.7, 8.1)", () => {
     await expect(a.call("nuovaPasswordTemporanea", { festaId, uid: b.uid })).rejects.toThrow(/superadmin/);
   });
 
-  it("si nomina un secondo superadmin; l'ultimo non si può togliere", async () => {
+  it("il proprietario nomina e toglie i superadmin; lui resta sempre superadmin", async () => {
     const a = await entra("anna", { ruoloFesta: "admin" });
     const io = (await admin().auth.getUserByEmail("alessio@test.it")).uid;
-    await expect(sa("impostaSuperadmin", { uid: io, superadmin: false })).rejects.toThrow(/almeno un superadmin/);
+    await expect(sa("impostaSuperadmin", { uid: io, superadmin: false })).rejects.toThrow(/proprietario resta/);
     await sa("impostaSuperadmin", { uid: a.uid, superadmin: true });
     expect((await admin().auth.getUser(a.uid)).customClaims?.superadmin).toBe(true);
+    await sa("impostaSuperadmin", { uid: a.uid, superadmin: false });
+    expect((await admin().auth.getUser(a.uid)).customClaims?.superadmin).toBe(false);
+  });
+
+  it("un co-superadmin fa tutto tranne toccare i superadmin e il proprietario", async () => {
+    const a = await entra("anna", { ruoloFesta: "admin" });
+    const m = await entra("mario");
+    await sa("impostaSuperadmin", { uid: a.uid, superadmin: true });
+    // Il claim nuovo arriva con un token nuovo: si rientra.
+    const co = await client("anna@test.it");
+    const io = (await admin().auth.getUserByEmail("alessio@test.it")).uid;
+
+    await expect(co("impostaSuperadmin", { uid: m.uid, superadmin: true })).rejects.toThrow(/Solo il proprietario/);
+    await expect(co("impostaSuperadmin", { uid: io, superadmin: false })).rejects.toThrow(/Solo il proprietario/);
+    await expect(co("nuovaPasswordTemporanea", { uid: io })).rejects.toThrow(/Solo il proprietario/);
+    await expect(co("disattivaPersona", { festaId, uid: io })).rejects.toThrow(/proprietario/);
+    await expect(co("disattivaPersona", { uid: io })).rejects.toThrow(/superadmin/);
+    // Il resto sì: crea admin, cambia la password a un membro.
+    await expect(co("creaPersona", { festaId, nome: "luca", cognome: "Test", email: "luca@test.it", telefono: "333 1234567", ruoloFesta: "admin", commissioni: {} }))
+      .resolves.toMatchObject({ nuovoAccount: true });
+    await expect(co("nuovaPasswordTemporanea", { uid: m.uid })).resolves.toMatchObject({ email: "mario@test.it" });
   });
 });

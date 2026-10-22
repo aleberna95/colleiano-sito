@@ -9,6 +9,8 @@ export const userSchema = auditSchema.extend({
   email: z.email(),
   telefono: z.string().trim().min(6), // obbligatorio: serve per WhatsApp
   superadmin: z.boolean(),
+  /** Il superadmin che ha il controllo: solo lui nomina o toglie i superadmin (decisione di Alessio, 22/10/2026). */
+  proprietario: z.boolean().optional(),
   attivo: z.boolean(),
   devoCambiarePassword: z.boolean(),
   ultimaFestaId: z.string().optional(),

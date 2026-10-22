@@ -21,14 +21,14 @@ export async function svuota() {
 }
 
 /** Crea un account (come lo script di bootstrap) e restituisce uid ed email. */
-export async function account(nome: string, opz: { superadmin?: boolean } = {}) {
+export async function account(nome: string, opz: { superadmin?: boolean; proprietario?: boolean } = {}) {
   const { auth, db } = admin();
   const email = `${nome}@test.it`;
   const { uid } = await auth.createUser({ email, password: "password-test" });
-  if (opz.superadmin) await auth.setCustomUserClaims(uid, { superadmin: true });
+  if (opz.superadmin) await auth.setCustomUserClaims(uid, { superadmin: true, ...(opz.proprietario && { proprietario: true }) });
   await db.doc(`users/${uid}`).set({
     nome, cognome: "Test", nomeVisualizzato: nome, email, telefono: "3330000000",
-    superadmin: !!opz.superadmin, attivo: true, devoCambiarePassword: false,
+    superadmin: !!opz.superadmin, ...(opz.proprietario && { proprietario: true }), attivo: true, devoCambiarePassword: false,
     createdAt: FieldValue.serverTimestamp(), createdBy: "test",
     updatedAt: FieldValue.serverTimestamp(), updatedBy: "test",
   });

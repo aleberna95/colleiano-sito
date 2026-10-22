@@ -206,6 +206,9 @@ export const disattivaPersona = onCall(async (req) => {
     const target = membroDa(await ref.get());
     if (!target?.attivo) throw new HttpsError("not-found", "Persona non trovata nella festa.");
     if (target.ruoloFesta === "admin" && !ctx.superadmin) vietato("Solo un superadmin può disattivare un admin.");
+    if (!ctx.proprietario && (await db().doc(`users/${input.uid}`).get()).get("proprietario") === true) {
+      vietato("Il proprietario non si può togliere dalla festa.");
+    }
     await disattivaInFesta(input.festaId, input.uid, target, ctx.uid);
     return { ok: true };
   }
@@ -256,6 +259,8 @@ export const nuovaPasswordTemporanea = onCall(async (req) => {
   const user = (await userRef.get()).data() as User | undefined;
   if (!user?.attivo) throw new HttpsError("not-found", "Account non trovato o disattivato.");
   if (user.superadmin && input.uid !== io.uid && !io.superadmin) vietato();
+  // La password di un altro superadmin la cambia solo il proprietario: nessuno può prendersi il suo account.
+  if (user.superadmin && input.uid !== io.uid && !io.proprietario) vietato("Solo il proprietario può cambiare la password di un superadmin.");
 
   const password = passwordTemporanea();
   await getAuth().updateUser(input.uid, { password });
@@ -263,14 +268,15 @@ export const nuovaPasswordTemporanea = onCall(async (req) => {
   return { password, email: user.email, telefono: user.telefono, nome: user.nomeVisualizzato };
 });
 
-/** Nomina o toglie un superadmin. Mai lasciare il sistema senza superadmin (SPEC 4.3). */
+/** Nomina o toglie un superadmin: solo il proprietario. Mai lasciare il sistema senza superadmin (SPEC 4.3). */
 export const impostaSuperadmin = onCall(async (req) => {
   const input = valida(impostaSuperadminInput, req.data);
   const io = chiamante(req);
-  if (!io.superadmin) vietato();
+  if (!io.superadmin || !io.proprietario) vietato("Solo il proprietario può nominare o togliere un superadmin.");
   const userRef = db().doc(`users/${input.uid}`);
   const user = (await userRef.get()).data() as User | undefined;
   if (!user?.attivo) throw new HttpsError("not-found", "Account non trovato o disattivato.");
+  if (user.proprietario) vietato("Il proprietario resta sempre superadmin.");
 
   if (!input.superadmin) {
     const altri = await db().collection("users").where("superadmin", "==", true).where("attivo", "==", true).get();

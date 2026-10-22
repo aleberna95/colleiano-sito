@@ -98,6 +98,7 @@ tests/ (rules/, unit/, e2e/)   scripts/ (bootstrap-superadmin.ts, seed-emulator.
 | Livello | Ambito | Dove vive |
 |---|---|---|
 | **Superadmin** (4) | tutto | custom claim `superadmin: true` + `users/{uid}.superadmin` |
+| *Proprietario* | tra i superadmin, quello che ha il controllo | custom claim `proprietario: true` + `users/{uid}.proprietario`, dato dallo script di bootstrap con `--proprietario` |
 | **Admin** (3) | una festa | `feste/{f}/membri/{uid}.ruoloFesta = "admin"` |
 | **Referente** (2) | una commissione | `membri/{uid}.commissioni[commId] = "referente"` |
 | **Componente** (1) | una commissione | `membri/{uid}.commissioni[commId] = "componente"` |
@@ -111,6 +112,7 @@ tests/ (rules/, unit/, e2e/)   scripts/ (bootstrap-superadmin.ts, seed-emulator.
 | Chi | Crea account | Assegna ruoli | Disattiva |
 |---|---|---|---|
 | Superadmin | chiunque | tutti, ed è **l'unico che crea o nomina admin** | chiunque (non l'ultimo superadmin) |
+| Proprietario | come superadmin | in più è **l'unico che nomina o toglie i superadmin**; nessuno può togliergli il ruolo, disattivarlo, toglierlo da una festa o cambiargli la password. Solo lui cambia la password di un altro superadmin. *(Decisione di Alessio del 22/10/2026.)* | |
 | Admin | persone non admin nella sua festa | referenti e componenti nella sua festa | membri non admin della sua festa |
 | Referente | – | aggiunge alla sua commissione persone già nella festa, come componenti o co-referenti; può toglierle | – |
 | Componente | – | – | – |

@@ -9,7 +9,7 @@ import type { User } from "@/lib/schemas";
 type AuthState =
   | { status: "loading" }
   | { status: "signedOut" }
-  | { status: "signedIn"; user: FirebaseUser; profilo: User | null; superadmin: boolean };
+  | { status: "signedIn"; user: FirebaseUser; profilo: User | null; superadmin: boolean; proprietario: boolean };
 
 const AuthContext = createContext<AuthState>({ status: "loading" });
 
@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const token = await user.getIdTokenResult();
       const superadmin = token.claims.superadmin === true;
+      const proprietario = token.claims.proprietario === true;
       stopProfilo = onSnapshot(
         doc(db, "users", user.uid),
         (snap) => {
@@ -36,9 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             void signOut(auth);
             return;
           }
-          setState({ status: "signedIn", user, profilo, superadmin });
+          setState({ status: "signedIn", user, profilo, superadmin, proprietario });
         },
-        () => setState({ status: "signedIn", user, profilo: null, superadmin }),
+        () => setState({ status: "signedIn", user, profilo: null, superadmin, proprietario }),
       );
     });
 
