@@ -1,7 +1,24 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import type { Metadata, Viewport } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { connection } from "next/server";
+import { Aggiornato, SalvaOffline } from "@/components/offline-pubblico";
+import { RegistraServiceWorker } from "@/components/pwa";
+import { oraDelServer } from "@/lib/programma";
+import { configSito, festaInEvidenza, mappa } from "@/lib/sito-pubblico";
 import logo from "@/public/icona-colleiano.png";
+
+// PWA del sito (SPEC 7.3): scope /, si apre anche senza segnale dopo la prima volta.
+export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Colleiano", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = { themeColor: "#1B3022" };
+
+/** Le pagine che servono il giorno della festa, offline (SPEC 7.2). Le edizioni passate no. */
+const PAGINE_OFFLINE = ["/", "/programma", "/mappa", "/wifi", "/info"];
 
 // Sito pubblico colleiano.it (SPEC 7.1): niente login, al massimo 2 tocchi per arrivare a tutto.
 export default function PubblicoLayout({ children }: { children: ReactNode }) {
@@ -28,6 +45,7 @@ export default function PubblicoLayout({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
+      <RegistraServiceWorker />
       <main id="contenuto" className="flex flex-1 flex-col">
         {children}
       </main>
@@ -52,6 +70,9 @@ export default function PubblicoLayout({ children }: { children: ReactNode }) {
               </Link>
             </li>
           </ul>
+          <Suspense fallback={null}>
+            <StatoOffline />
+          </Suspense>
           <p className="text-colleiano-linen/80">
             Sito di{" "}
             <a href="https://alessiobernardini.dev/qr" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
@@ -60,6 +81,25 @@ export default function PubblicoLayout({ children }: { children: ReactNode }) {
           </p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/** "Aggiornato alle…" e il salvataggio per l'offline, con le immagini della festa in evidenza. */
+async function StatoOffline() {
+  await connection();
+  const [config, festa] = await Promise.all([configSito(), festaInEvidenza()]);
+  const dati = festa ? await mappa(festa.id) : null;
+  const immagini = [
+    config.immagineCopertina,
+    festa?.paginaPubblica.copertina,
+    dati?.immagine.url,
+    ...(dati?.punti.map((p) => p.foto) ?? []),
+  ].filter((u): u is string => !!u);
+  return (
+    <div className="flex flex-col gap-2">
+      <Aggiornato ora={oraDelServer()} />
+      <SalvaOffline pagine={PAGINE_OFFLINE} immagini={immagini} />
     </div>
   );
 }

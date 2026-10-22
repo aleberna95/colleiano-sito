@@ -53,4 +53,5 @@ functions/lib/
 /playwright-report/
 
 # service worker compilato (pnpm build:sw)
+/public/sw.js
 /public/gestione/sw.js

@@ -21,8 +21,8 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 | F2.2 | Sito pubblico: home (stato normale), `/info`, `/edizioni`, `/edizioni/[slug]`; inserire l'**edizione 2026** riprendendo testi, programma, artisti e foto da `legacy-site/`; stile del sito attuale (SPEC 9.2) | ✅ pubblicata il 22/10/2026; manca lo script in produzione (lo lancia Alessio) |
 | F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | ✅ in codice il 22/10/2026 (DNS in propagazione) |
 | F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | ✅ pubblicata il 22/10/2026 |
-| F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | – |
-| F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | – |
+| F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | ✅ 22/10/2026 |
+| F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | ✅ in codice il 22/10/2026; manca la prova in piazza (Alessio) |
 
 ### F2.1
 - Dati (`lib/schemas/sito.ts`, `festa.ts`): `sito/config` { festaInEvidenzaId?, chiSiamo, comeArrivare, indirizzo, linkMappe, faq[], immagineCopertina? }; sulla festa `modalitaFesta`, `inArchivioPubblico`, `paginaPubblica` { testo?, copertina?, galleria[] } (immagini = download URL di Storage); `feste/{f}/programma/{id}` { titolo, inizio, fine?, puntoId?, descrizione?, ordine } (regole già pronte, editor in F2.5).
@@ -55,7 +55,23 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 - Pubblico `/mappa` (festa in evidenza): bottoni filtro enormi (Tutto + solo le categorie presenti, in ordine SPEC, anche "Accessibile"), punti filtrati che pulsano, scheda dal basso con foto, descrizione, orari, eventi del programma con quel `puntoId`; elenco dei punti sotto la mappa (accessibile anche senza mappa). Link "Mappa del paese" in home se la mappa c'è.
 - Non fatto: "Come arrivo" (i punti non hanno coordinate GPS: servirebbe un campo in più) e "Sei qui" col GPS (facoltativo). Da decidere con Alessio se servono.
 
-Da tenere a mente: il sito pubblico non legge mai task, spese o persone; il manifest pubblico ha scope `/` e quello del gestionale resta `/gestione/` (un solo service worker con strategie diverse, SPEC 7.3: oggi c'è solo `sw/gestione.ts`).
+### F2.5
+- Dati: `feste/{f}/avvisi/{id}` { testo (≤500), tipo `info`|`importante`, attivo } + audit; Wi-Fi in `feste/{f}/mappa/config.wifi` { nomeRete (≤32), password? (8-63, WPA), puntoId? } (SPEC 7.3). Ora `mappa/config` può avere solo il Wi-Fi senza disegno: `caricaMappa` e `salvaWifi` scrivono con `mergeFields` per non cancellarsi a vicenda. Regole: avvisi come il programma (lettura se festa pubblica o membri, scrittura admin, non archiviata); test in `tests/rules/sito.test.ts` + parità (avviso, Wi-Fi, modalità festa).
+- `lib/programma.ts` (test `tests/unit/programma.test.ts`): `statoEvento` (in corso/finito/futuro; senza fine un evento dura fino al successivo, massimo 2 ore), `adessoEDopo`, `perGiorno`, `orariDaInput` (ora italiana; fine prima dell'inizio = dopo mezzanotte). `testoQrWifi` in `lib/mappa.ts`.
+- Gestionale, Altro → Sito: card **Modalità festa** (accendi/spegni, admin; avvisa se la festa non è in evidenza), voci **Programma** (eventi per giorno, form: cosa, giorno, inizio, fine, punto della mappa, descrizione; tocca per cambiare o togliere), **Avvisi** (pubblica info/importante, nascondi/rimetti, elimina), **Wi-Fi** (rete predefinita `colleiano-wifi`, password, punto).
+- Sito: home in modalità festa (festa in evidenza con `modalitaFesta`): in cima nome (h1), **Adesso/Dopo**, avvisi accesi (importanti in rosso), tre bottoni enormi Programma · Mappa · Wi-Fi; sotto la home normale. `/programma` (per giorno, in corso evidenziato con "Adesso", finiti attenuati, luogo → `/mappa?punto=<id>` che apre la scheda). `/wifi` (rete, password, dove si trova, QR SVG fatto sul server con `qrcode`). L'ora di "adesso" la calcola il telefono (`useOra` in `components/programma-pubblico.tsx`, ogni 30 s): serve per la cache e per l'offline della F2.6.
+- e2e `tests/e2e/sito.spec.ts` "modalità festa": l'admin crea due eventi (uno in corso, uno dopo), un avviso, il Wi-Fi, accende la modalità; il visitatore vede home, programma, mappa dal luogo, Wi-Fi. `/programma` e `/wifi` vuote in `accessibilita.spec.ts`.
+
+### F2.6
+- **Un solo service worker** (SPEC 7.3): `sw/sw.ts` → `public/sw.js` (ignorato da git), scope `/`, registrato da `RegistraServiceWorker` (sito e gestionale) che toglie il vecchio `/gestione/sw.js`. Strategie: gestionale come prima (NetworkFirst sulle pagine `/gestione`, solo app shell); pagine del sito NetworkFirst (4 s) con chiave senza parametri (`/mappa?punto=x` = `/mappa`); `/_next/static` CacheFirst; immagini di Firebase Storage CacheFirst (`sito-immagini`); altre risorse SWR. Le navigazioni interne del sito (RSC) non si salvano: offline falliscono e Next (senza `experimental.useOffline`) ricarica la pagina, che arriva dalla cache.
+- Salvataggio: `SalvaOffline` (`components/offline-pubblico.tsx`, nel footer del layout pubblico) manda al service worker `{ tipo: "salva-sito", pagine, immagini }`: le pagine `/`, `/programma`, `/mappa`, `/wifi`, `/info` (non le edizioni), le risorse trovate nel loro HTML (`/_next/static/…`, `/_next/image?…`) e le immagini della festa in evidenza (copertine, disegno della mappa, foto dei punti; da Storage in CORS o, se manca, opache). Al massimo ogni 5 minuti con la rete; poi il footer dice "Salvato sul telefono: funziona anche senza segnale". Scarica anche il pezzo di Leaflet (`import("leaflet")`).
+- "Aggiornato alle HH:mm" nel footer (`Aggiornato`): ora del server della pagina; offline resta quella della copia salvata.
+- Manifest pubblico `public/manifest.webmanifest` (scope e start `/`, icone del gestionale); quello del gestionale resta `/gestione/manifest.webmanifest`.
+- e2e "dopo la prima apertura il sito funziona senza segnale" (`context.setOffline`).
+- **Da fare (Alessio, almeno un mese prima)**: prova in paese (SPEC 10): aprire colleiano.it in piazza sul Wi-Fi, aspettare "Salvato sul telefono", spegnere Wi-Fi e dati, girare il paese aprendo programma, mappa, Wi-Fi.
+- Non fatto di proposito: tile della mappa (basta la versione ridotta a 2560 px), avviso "Sei offline" sul sito (c'è l'ora dell'aggiornamento).
+
+Da tenere a mente: il sito pubblico non legge mai task, spese o persone.
 
 ## Fase 1
 | Milestone | Stato |
@@ -94,14 +110,14 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - Attenzione: le callable trasformano `undefined` in `null` e Zod lo rifiuta: i campi facoltativi vuoti non si mandano proprio.
 
 ### M5
-- PWA del gestionale: `public/gestione/manifest.webmanifest` (scope `/gestione/`, icone in `public/gestione/` generate dal logo), metadata in `app/gestione/layout.tsx`. Service worker scritto con `serwist` in `sw/gestione.ts`, compilato da `pnpm build:sw` (lo fanno già `pnpm build` e `pnpm test:e2e`) in `public/gestione/sw.js` (ignorato da git): solo app shell (pagine `/gestione` NetworkFirst, `/_next/static` CacheFirst, risorse StaleWhileRevalidate); registrato solo in produzione da `RegistraServiceWorker`. Scartato `@serwist/turbopack`: la sua route usa `dynamic`/`revalidate`, non compatibili con Cache Components, e servirebbe da `/serwist/`, fuori scope.
+- PWA del gestionale: `public/gestione/manifest.webmanifest` (scope `/gestione/`, icone in `public/gestione/` generate dal logo), metadata in `app/gestione/layout.tsx`. Service worker scritto con `serwist` (dalla F2.6 unico per sito e gestionale, `sw/sw.ts` → `public/sw.js`), compilato da `pnpm build:sw` (lo fanno già `pnpm build` e `pnpm test:e2e`): solo app shell (pagine `/gestione` NetworkFirst, `/_next/static` CacheFirst, risorse StaleWhileRevalidate); registrato solo in produzione da `RegistraServiceWorker`. Scartato `@serwist/turbopack`: la sua route usa `dynamic`/`revalidate`, non compatibili con Cache Components, e servirebbe da `/serwist/`, fuori scope.
 - Offline: Firestore con `persistentLocalCache` (multi-tab) in `lib/firebase.ts`; avviso "Sei offline" (`AvvisoOffline`); "Esci" (`esci()` in `lib/firebase.ts`) cancella anche la copia locale.
 - Istruzioni per installare (iPhone/Android, o pulsante "Installa" se il browser lo offre) in "Le mie cose" finché non si chiudono (`localStorage`).
 - `scripts/seed-emulator.ts` (`pnpm seed`, con `pnpm emulators` acceso): svuota l'emulatore e crea festa, 6 persone (`<nome>@colleiano.test`, password `password-prova`), commissioni, task e spese. Funziona solo sugli emulatori.
 - Accessibilità: `tests/e2e/accessibilita.spec.ts` apre 19 pagine a 375px, controlla axe (WCAG A/AA, nessun problema serio), niente scorrimento orizzontale, e salva le schermate in `test-results/schermate/`. Corretti i contrasti dei badge di stato e degli avvisi arancioni.
 
 ### Prossimo passo
-**F2.5** (programma, avvisi, modalità festa, Wi-Fi). F2.3 e F2.4 fatte; restano i passi in console di Alessio (sezione F2.3) e lo script dell'edizione 2026 (sezione F2.2).
+Fase 2 completa in codice (F2.1-F2.6). Restano: la prova in piazza (F2.6), le scelte aperte della F2.4 ("Come arrivo", "Sei qui"), il disegno della mappa del comitato; poi raccogliere segnalazioni e correggere. Restano anche i passi in console di Alessio (sezione F2.3) e lo script dell'edizione 2026 (sezione F2.2).
 
 Storico (Fase 1): Fase 1 completa e provata in produzione da Alessio il 22/10/2026 (task, allegati, spese con scontrino). Commissioni del comitato inserite nella "Festa di Luglio 2027" (le persone le aggiunge Alessio). Ora: test con 2-3 admin (Antonio da nominare secondo superadmin da Altro → Account e feste); raccogliere le segnalazioni e correggere. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 

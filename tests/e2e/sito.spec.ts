@@ -141,3 +141,142 @@ test("l'admin mette i punti sulla mappa e il visitatore li filtra", async ({ pag
   await page.getByRole("button", { name: "Tutto", exact: true }).click();
   await expect(page.getByRole("button", { name: "Stand della porchetta (Mangiare)" })).toBeVisible();
 });
+
+/** Giorno e ora italiani di un istante, come li scrive il form ("AAAA-MM-GG", "HH:mm"). */
+function inItalia(ms: number) {
+  const [giorno, ora] = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+  }).format(new Date(ms)).split(" ");
+  return { giorno, ora };
+}
+
+test("modalità festa: programma, avvisi e Wi-Fi dal gestionale alla home", async ({ page }) => {
+  test.setTimeout(180_000);
+  const sara = await creaUtente({ email: "sara@test.it", password: "password-test", nome: "Sara", superadmin: true, devoCambiarePassword: false });
+  const festaId = await creaFesta("prova", [{ uid: sara, nome: "Sara", admin: true }]);
+  const { db } = admin();
+  const audit = { createdAt: FieldValue.serverTimestamp(), createdBy: sara, updatedAt: FieldValue.serverTimestamp(), updatedBy: sara };
+  await db.doc(`feste/${festaId}/mappa/config`).set({
+    immagine: { url: "http://localhost:3100/icona-colleiano.png", larghezza: 1000, altezza: 600 }, updatedAt: FieldValue.serverTimestamp(), updatedBy: sara,
+  });
+  await db.collection(`feste/${festaId}/mappa/config/punti`).add({ nome: "Piazza", categoria: "wifi", x: 0.5, y: 0.5, accessibile: true, ...audit });
+  await db.doc("sito/config").set({
+    festaInEvidenzaId: festaId, chiSiamo: "", comeArrivare: "", indirizzo: "", linkMappe: "", faq: [],
+    updatedAt: FieldValue.serverTimestamp(), updatedBy: sara,
+  });
+
+  await page.goto("/gestione/login");
+  await page.getByLabel("Email").fill("sara@test.it");
+  await page.getByLabel("Password").fill("password-test");
+  await page.getByRole("button", { name: "Entra" }).click();
+  await expect(page).not.toHaveURL(/login/);
+
+  // Programma: un evento in corso adesso e uno dopo.
+  const ora = Date.now();
+  const pranzo = inItalia(ora - 3_600_000);
+  const fine = inItalia(ora + 3_600_000);
+  const ballo = inItalia(ora + 2 * 3_600_000);
+  await page.goto("/gestione/f/prova/sito");
+  await page.getByRole("link", { name: "Programma", exact: true }).click();
+  await expect(page.getByText("Il programma è vuoto")).toBeVisible();
+  await controlla(page, "sito-programma-vuoto");
+  for (const [titolo, quando, finisce] of [["Pranzo in piazza", pranzo, fine.ora], ["Festa a ballo", ballo, ""]] as const) {
+    await page.getByRole("button", { name: "Aggiungi un evento" }).click();
+    await page.getByRole("textbox", { name: "Cosa succede" }).fill(titolo);
+    await page.getByLabel("Giorno").fill(quando.giorno);
+    await page.getByLabel("Inizio").fill(quando.ora);
+    if (finisce) await page.getByLabel("Fine (facoltativa)").fill(finisce);
+    if (titolo === "Pranzo in piazza") await page.getByRole("combobox", { name: "Dove (punto della mappa)" }).selectOption({ label: "Piazza" });
+    await page.getByRole("button", { name: "Aggiungi al programma" }).click();
+    await expect(page.getByText("Evento aggiunto al programma.")).toBeVisible();
+  }
+  await expect(page.getByRole("button", { name: /Festa a ballo/ })).toBeVisible();
+  await controlla(page, "sito-programma");
+
+  // Un avviso importante.
+  await page.goto("/gestione/f/prova/sito/avvisi");
+  await page.getByRole("textbox", { name: "Avviso" }).fill("Lo spettacolo è spostato in piazza");
+  await page.getByRole("radio", { name: "Importante (in rosso)" }).check();
+  await page.getByRole("button", { name: "Pubblica l'avviso" }).click();
+  await expect(page.getByText("Avviso pubblicato.")).toBeVisible();
+  await controlla(page, "sito-avvisi");
+
+  // Wi-Fi con password, in piazza.
+  await page.goto("/gestione/f/prova/sito/wifi");
+  await expect(page.getByRole("textbox", { name: "Nome della rete" })).toHaveValue("colleiano-wifi");
+  await page.getByRole("textbox", { name: "Password (vuota se la rete è aperta)" }).fill("corta");
+  await page.getByRole("button", { name: "Salva il Wi-Fi" }).click();
+  await expect(page.getByText("La password del Wi-Fi ha almeno 8 caratteri")).toBeVisible();
+  await page.getByRole("textbox", { name: "Password (vuota se la rete è aperta)" }).fill("festa2027");
+  await page.getByRole("combobox", { name: "Dove si trova (punto della mappa)" }).selectOption({ label: "Piazza" });
+  await page.getByRole("button", { name: "Salva il Wi-Fi" }).click();
+  await expect(page.getByText("Wi-Fi salvato.")).toBeVisible();
+  await controlla(page, "sito-wifi");
+
+  // Interruttore.
+  await page.goto("/gestione/f/prova/sito");
+  await page.getByRole("button", { name: "Accendi la modalità festa" }).click();
+  await expect(page.getByRole("heading", { name: "Modalità festa: accesa" })).toBeVisible();
+
+  // Il visitatore: la home cambia quando il trigger ha copiato la modalità festa.
+  await finche(page, "/", async () => {
+    await expect(page.getByRole("heading", { name: "Festa di prova", level: 1 })).toBeVisible({ timeout: 2000 });
+  });
+  await expect(page.getByRole("region", { name: "Adesso" })).toContainText("Pranzo in piazza");
+  await expect(page.getByRole("region", { name: "Dopo" })).toContainText("Festa a ballo");
+  await expect(page.getByText("Lo spettacolo è spostato in piazza")).toBeVisible();
+  await controlla(page, "pubblico-home-festa");
+
+  await page.getByRole("navigation", { name: "La festa" }).getByRole("link", { name: "Programma" }).click();
+  await expect(page.getByRole("heading", { name: "Programma", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pranzo in piazza" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pranzo in piazza" }).locator("..").getByText("Adesso", { exact: true })).toBeVisible();
+  await controlla(page, "pubblico-programma");
+  await page.getByRole("link", { name: "Piazza", exact: true }).click();
+  await expect(page).toHaveURL(/\/mappa\?punto=/);
+  await expect(page.getByRole("heading", { name: "Piazza", level: 2 })).toBeVisible();
+
+  await page.goto("/wifi");
+  await expect(page.getByText("colleiano-wifi")).toBeVisible();
+  await expect(page.getByText("festa2027")).toBeVisible();
+  await expect(page.getByRole("img", { name: "QR per collegarsi alla rete colleiano-wifi" })).toBeVisible();
+  await controlla(page, "pubblico-wifi");
+});
+
+test("dopo la prima apertura il sito funziona senza segnale", async ({ page, context }) => {
+  test.setTimeout(180_000);
+  const sara = await creaUtente({ email: "sara@test.it", password: "password-test", nome: "Sara", superadmin: true, devoCambiarePassword: false });
+  const festaId = await creaFesta("prova", [{ uid: sara, nome: "Sara", admin: true }]);
+  const { db } = admin();
+  const audit = { createdAt: FieldValue.serverTimestamp(), createdBy: sara, updatedAt: FieldValue.serverTimestamp(), updatedBy: sara };
+  await db.doc(`feste/${festaId}/mappa/config`).set({
+    immagine: { url: "/icona-colleiano.png", larghezza: 1000, altezza: 600 },
+    wifi: { nomeRete: "colleiano-wifi" },
+    updatedAt: FieldValue.serverTimestamp(), updatedBy: sara,
+  });
+  await db.collection(`feste/${festaId}/mappa/config/punti`).add({ nome: "Bagni", categoria: "bagni", x: 0.3, y: 0.4, accessibile: true, ...audit });
+  await db.collection(`feste/${festaId}/programma`).add({ titolo: "Santa Messa", inizio: Timestamp.fromDate(new Date("2027-07-17T09:00:00Z")), ordine: 0, ...audit });
+  await db.doc("sito/config").set({
+    festaInEvidenzaId: festaId, chiSiamo: "", comeArrivare: "", indirizzo: "", linkMappe: "", faq: [],
+    updatedAt: FieldValue.serverTimestamp(), updatedBy: sara,
+  });
+
+  // In piazza, col Wi-Fi: si apre la home e il telefono salva tutto.
+  await finche(page, "/", async () => {
+    await expect(page.getByRole("heading", { name: "Festa di prova" })).toBeVisible({ timeout: 2000 });
+  });
+  await expect(page.getByText("Salvato sul telefono: funziona anche senza segnale.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Aggiornato alle \d\d:\d\d/)).toBeVisible();
+
+  // Lontano dalla piazza: niente rete.
+  await context.setOffline(true);
+  await page.goto("/programma");
+  await expect(page.getByRole("heading", { name: "Santa Messa" })).toBeVisible();
+  await page.goto("/mappa?punto=qualcosa");
+  await expect(page.getByRole("button", { name: "Bagni (Bagni)" })).toBeVisible();
+  await page.goto("/wifi");
+  await expect(page.getByText("colleiano-wifi")).toBeVisible();
+  await page.goto("/info");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await context.setOffline(false);
+});

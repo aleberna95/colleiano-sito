@@ -4,11 +4,19 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Share, SquarePlus, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/** Registra il service worker del gestionale (solo in produzione: in sviluppo darebbe pagine vecchie). */
+/** Il service worker c'è solo in produzione: in sviluppo darebbe pagine vecchie. */
+export const conServiceWorker = () => process.env.NODE_ENV === "production" && "serviceWorker" in navigator;
+
+/** Registra l'unico service worker di colleiano.it (sito e gestionale, SPEC 7.3). */
 export function RegistraServiceWorker() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("/gestione/sw.js", { scope: "/gestione/" }).catch(() => {});
+    if (!conServiceWorker()) return;
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+    // Il vecchio service worker del solo gestionale (scope /gestione/) prenderebbe il posto di quello nuovo.
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((tutte) => tutte.filter((r) => new URL(r.scope).pathname === "/gestione/").forEach((r) => r.unregister()))
+      .catch(() => {});
   }, []);
   return null;
 }
