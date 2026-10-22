@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Accessibility, Clock, LayoutGrid, X } from "lucide-react";
 import { Mappa } from "@/components/mappa";
 import { formatOra } from "@/lib/format";
@@ -11,7 +12,9 @@ import { cn } from "@/lib/utils";
 /** Mappa del sito (SPEC 7.1): bottoni enormi per filtrare, punti che pulsano, scheda grande dal basso. */
 export function MappaPubblicaVista({ mappa, eventi }: { mappa: MappaPubblica; eventi: EventoPubblico[] }) {
   const [filtro, setFiltro] = useState<Filtro | null>(null);
-  const [selezionato, setSelezionato] = useState<string>();
+  // /mappa?punto=<id> (dal programma o dal Wi-Fi) apre subito la scheda di quel punto.
+  const richiesto = useSearchParams().get("punto") ?? undefined;
+  const [selezionato, setSelezionato] = useState(mappa.punti.some((p) => p.id === richiesto) ? richiesto : undefined);
   const visibili = mappa.punti.filter((p) => passaFiltro(p, filtro));
   // Solo i filtri che hanno almeno un punto.
   const filtri = FILTRI.filter((f) => mappa.punti.some((p) => passaFiltro(p, f.id)));

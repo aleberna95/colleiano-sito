@@ -1,10 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addDoc, collection, deleteDoc, deleteField, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, deleteField, doc, onSnapshot, serverTimestamp, setDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
-import { CONFIG_SITO_VUOTA, type MappaConfig, type PaginaPubblica, type Punto, type PuntoForm, type SitoConfig } from "@/lib/schemas";
+import { orariDaInput } from "@/lib/programma";
+import {
+  CONFIG_SITO_VUOTA,
+  type AvvisoForm,
+  type AvvisoSito,
+  type EventoForm,
+  type EventoProgramma,
+  type MappaConfig,
+  type PaginaPubblica,
+  type Punto,
+  type PuntoForm,
+  type SitoConfig,
+  type WifiForm,
+} from "@/lib/schemas";
 import { useLista, type Caricato } from "./tasks";
 
 export type DatiSitoConfig = Omit<SitoConfig, "updatedAt" | "updatedBy">;
@@ -94,11 +107,25 @@ export async function caricaImmagineSito(cartella: string, file: File): Promise<
 export async function caricaMappa(festaId: string, uid: string, file: File) {
   const { blob, larghezza, altezza } = await riduci(file, 2560);
   const url = await carica(`sito/feste/${festaId}`, blob);
-  await setDoc(doc(db, "feste", festaId, "mappa", "config"), {
-    immagine: { url, larghezza, altezza },
-    updatedAt: serverTimestamp(),
-    updatedBy: uid,
-  });
+  // mergeFields: il Wi-Fi, che sta nello stesso documento, resta com'è.
+  await setDoc(
+    doc(db, "feste", festaId, "mappa", "config"),
+    { immagine: { url, larghezza, altezza }, updatedAt: serverTimestamp(), updatedBy: uid },
+    { mergeFields: ["immagine", "updatedAt", "updatedBy"] },
+  );
+}
+
+/** Wi-Fi della festa (SPEC 7.1): i campi vuoti non si salvano. */
+export function salvaWifi(festaId: string, uid: string, { nomeRete, password, puntoId }: WifiForm) {
+  return setDoc(
+    doc(db, "feste", festaId, "mappa", "config"),
+    {
+      wifi: { nomeRete: nomeRete.trim(), ...(password ? { password } : {}), ...(puntoId ? { puntoId } : {}) },
+      updatedAt: serverTimestamp(),
+      updatedBy: uid,
+    },
+    { mergeFields: ["wifi", "updatedAt", "updatedBy"] },
+  );
 }
 
 export function useMappa(festaId: string): Caricato<MappaConfig | null> {
@@ -155,3 +182,56 @@ export const eliminaPunto = (festaId: string, id: string) => deleteDoc(doc(punti
 export async function togliImmagineSito(url: string) {
   await deleteObject(ref(storage, url)).catch(() => {});
 }
+
+// ---- Programma (SPEC 7.1) ----
+
+export type EventoConId = EventoProgramma & { id: string };
+
+export function useProgramma(festaId: string) {
+  return useLista<EventoProgramma>(["feste", festaId, "programma"], [], (a, b) => a.inizio.toMillis() - b.inizio.toMillis() || a.ordine - b.ordine);
+}
+
+function datiEvento(v: EventoForm) {
+  const { inizio, fine } = orariDaInput(v.giorno, v.inizio, v.fine);
+  return {
+    titolo: v.titolo.trim(),
+    inizio: Timestamp.fromDate(inizio),
+    fine: fine ? Timestamp.fromDate(fine) : undefined,
+    puntoId: v.puntoId || undefined,
+    descrizione: v.descrizione.trim() || undefined,
+  };
+}
+
+export async function creaEvento(festaId: string, uid: string, v: EventoForm, ordine: number) {
+  const ora = serverTimestamp();
+  const dati = Object.fromEntries(Object.entries(datiEvento(v)).filter(([, x]) => x !== undefined));
+  await addDoc(collection(db, "feste", festaId, "programma"), { ...dati, ordine, createdAt: ora, createdBy: uid, updatedAt: ora, updatedBy: uid });
+}
+
+export function aggiornaEvento(festaId: string, id: string, uid: string, v: EventoForm) {
+  const dati = Object.fromEntries(Object.entries(datiEvento(v)).map(([k, x]) => [k, x ?? deleteField()]));
+  return updateDoc(doc(db, "feste", festaId, "programma", id), { ...dati, updatedAt: serverTimestamp(), updatedBy: uid });
+}
+
+export const eliminaEvento = (festaId: string, id: string) => deleteDoc(doc(db, "feste", festaId, "programma", id));
+
+// ---- Avvisi (SPEC 7.1) ----
+
+export type AvvisoConId = AvvisoSito & { id: string };
+
+/** Dal più recente. */
+export function useAvvisi(festaId: string) {
+  return useLista<AvvisoSito>(["feste", festaId, "avvisi"], [], (a, b) => (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now()));
+}
+
+export async function creaAvviso(festaId: string, uid: string, { testo, tipo }: AvvisoForm) {
+  const ora = serverTimestamp();
+  await addDoc(collection(db, "feste", festaId, "avvisi"), {
+    testo: testo.trim(), tipo, attivo: true, createdAt: ora, createdBy: uid, updatedAt: ora, updatedBy: uid,
+  });
+}
+
+export const mostraAvviso = (festaId: string, id: string, uid: string, attivo: boolean) =>
+  updateDoc(doc(db, "feste", festaId, "avvisi", id), { attivo, updatedAt: serverTimestamp(), updatedBy: uid });
+
+export const eliminaAvviso = (festaId: string, id: string) => deleteDoc(doc(db, "feste", festaId, "avvisi", id));

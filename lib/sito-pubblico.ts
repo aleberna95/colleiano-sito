@@ -1,5 +1,14 @@
 import { cacheLife } from "next/cache";
-import { CONFIG_SITO_VUOTA, type EventoProgramma, type MappaConfig, type Punto, type SitoConfig, type SitoFesta } from "@/lib/schemas";
+import {
+  CONFIG_SITO_VUOTA,
+  type AvvisoSito,
+  type EventoProgramma,
+  type MappaConfig,
+  type Punto,
+  type SitoConfig,
+  type SitoFesta,
+  type Wifi,
+} from "@/lib/schemas";
 
 // Il sito pubblico legge Firestore dal server con l'API REST e senza login:
 // valgono le stesse Security Rules di un visitatore (SPEC 7.3) e al telefono non arriva l'SDK di Firebase.
@@ -81,7 +90,8 @@ export type EventoPubblico = Omit<EventoProgramma, "inizio" | "fine" | "createdA
 };
 export type ConfigPubblica = Omit<SitoConfig, "updatedAt" | "updatedBy">;
 export type PuntoPubblico = Omit<Punto, "createdAt" | "createdBy" | "updatedAt" | "updatedBy"> & { id: string };
-export type MappaPubblica = { immagine: MappaConfig["immagine"]; punti: PuntoPubblico[] };
+export type MappaPubblica = { immagine: NonNullable<MappaConfig["immagine"]>; punti: PuntoPubblico[] };
+export type AvvisoPubblico = Pick<AvvisoSito, "testo" | "tipo"> & { id: string };
 
 // Le modifiche dal gestionale arrivano sul sito entro un minuto (sugli emulatori subito, per i test).
 const profilo = emulatori ? { stale: 0, revalidate: 1, expire: 1 } : { stale: 30, revalidate: 60, expire: 600 };
@@ -127,7 +137,7 @@ export async function programma(festaId: string): Promise<EventoPubblico[]> {
 export async function mappa(festaId: string): Promise<MappaPubblica | null> {
   "use cache";
   cacheLife(profilo);
-  const config = (await leggi(`feste/${festaId}/mappa/config`)) as Pick<MappaConfig, "immagine"> | null;
+  const config = (await leggi(`feste/${festaId}/mappa/config`)) as Pick<MappaConfig, "immagine" | "wifi"> | null;
   if (!config?.immagine) return null;
   const punti = (await cerca("punti", {}, `feste/${festaId}/mappa/config`)) as PuntoPubblico[];
   return {
@@ -136,4 +146,20 @@ export async function mappa(festaId: string): Promise<MappaPubblica | null> {
       .map(({ id, nome, categoria, x, y, descrizione, foto, orari, accessibile }) => ({ id, nome, categoria, x, y, descrizione, foto, orari, accessibile }))
       .sort((a, b) => a.nome.localeCompare(b.nome)),
   };
+}
+
+/** Avvisi accesi di una festa pubblica, dal più recente. */
+export async function avvisi(festaId: string): Promise<AvvisoPubblico[]> {
+  "use cache";
+  cacheLife(profilo);
+  const righe = (await cerca("avvisi", { attivo: true }, `feste/${festaId}`)) as (AvvisoPubblico & { createdAt?: number })[];
+  return righe.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0)).map(({ id, testo, tipo }) => ({ id, testo, tipo }));
+}
+
+/** Il Wi-Fi della festa (sta nella config della mappa); null se non c'è. */
+export async function wifi(festaId: string): Promise<Wifi | null> {
+  "use cache";
+  cacheLife(profilo);
+  const config = (await leggi(`feste/${festaId}/mappa/config`)) as Pick<MappaConfig, "wifi"> | null;
+  return config?.wifi ?? null;
 }

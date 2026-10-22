@@ -37,7 +37,7 @@ test("tutte le pagine principali a 375px sono accessibili", async ({ page }) => 
   });
 
   // Sito pubblico ancora vuoto: stati vuoti che spiegano.
-  for (const [nome, url] of [["home", "/"], ["info", "/info"], ["edizioni", "/edizioni"], ["mappa", "/mappa"]]) {
+  for (const [nome, url] of [["home", "/"], ["info", "/info"], ["edizioni", "/edizioni"], ["mappa", "/mappa"], ["programma", "/programma"], ["wifi", "/wifi"]]) {
     await page.goto(url);
     await controlla(page, `pubblico-${nome}`);
   }

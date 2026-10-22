@@ -44,6 +44,34 @@ export const eventoProgrammaSchema = auditSchema.extend({
 });
 export type EventoProgramma = z.infer<typeof eventoProgrammaSchema>;
 
+const oraSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Scrivi l'ora, es. 17:30");
+
+/** Form di un evento nel gestionale: giorno e ore in ora italiana. Se la fine è prima dell'inizio, è il giorno dopo. */
+export const eventoFormSchema = z.object({
+  titolo: z.string().trim().min(1, "Scrivi cosa succede").max(120),
+  giorno: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Scegli il giorno"),
+  inizio: oraSchema,
+  fine: z.union([oraSchema, z.literal("")]),
+  puntoId: z.string(),
+  descrizione: z.string().trim().max(2000),
+});
+export type EventoForm = z.infer<typeof eventoFormSchema>;
+
+// feste/{f}/avvisi/{id}: pubblico come il programma; in home solo quelli attivi.
+export const tipoAvvisoSchema = z.enum(["info", "importante"]);
+export const avvisoSchema = auditSchema.extend({
+  testo: z.string().trim().min(1).max(500),
+  tipo: tipoAvvisoSchema,
+  attivo: z.boolean(),
+});
+export type AvvisoSito = z.infer<typeof avvisoSchema>;
+
+export const avvisoFormSchema = z.object({
+  testo: z.string().trim().min(1, "Scrivi l'avviso").max(500, "Al massimo 500 caratteri"),
+  tipo: tipoAvvisoSchema,
+});
+export type AvvisoForm = z.infer<typeof avvisoFormSchema>;
+
 // sitoFeste/{festaId}: copia pubblica dei dati della festa, scritta solo dalla Function.
 export const sitoFestaSchema = z.object({
   nome: z.string(),
@@ -102,9 +130,25 @@ export type TestiSitoForm = z.infer<typeof testiSitoFormSchema>;
 export const categoriaPuntoSchema = z.enum(["bagni", "mangiare", "bere", "eventi", "parcheggio", "info", "soccorso", "wifi", "altro"]);
 export type CategoriaPunto = z.infer<typeof categoriaPuntoSchema>;
 
-// feste/{f}/mappa/config: l'immagine è già ridotta per il telefono al caricamento.
+/** Il Wi-Fi della festa (SPEC 7.1): nome della rete, password se c'è, punto della mappa dove si trova. */
+export const wifiSchema = z.object({
+  nomeRete: z.string().trim().min(1).max(32),
+  password: z.string().min(8).max(63).optional(),
+  puntoId: z.string().min(1).optional(),
+});
+export type Wifi = z.infer<typeof wifiSchema>;
+
+export const wifiFormSchema = z.object({
+  nomeRete: z.string().trim().min(1, "Scrivi il nome della rete").max(32, "Al massimo 32 caratteri"),
+  password: z.union([z.string().min(8, "La password del Wi-Fi ha almeno 8 caratteri").max(63), z.literal("")]),
+  puntoId: z.string(),
+});
+export type WifiForm = z.infer<typeof wifiFormSchema>;
+
+// feste/{f}/mappa/config: l'immagine è già ridotta per il telefono al caricamento. Il Wi-Fi sta qui (SPEC 7.3).
 export const mappaConfigSchema = z.object({
-  immagine: z.object({ url: urlImmagineSchema, larghezza: z.number().int().positive(), altezza: z.number().int().positive() }),
+  immagine: z.object({ url: urlImmagineSchema, larghezza: z.number().int().positive(), altezza: z.number().int().positive() }).optional(),
+  wifi: wifiSchema.optional(),
   updatedAt: timestampSchema,
   updatedBy: uidSchema,
 });

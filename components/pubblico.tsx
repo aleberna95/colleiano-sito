@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, LoaderCircle } from "lucide-react";
 import { formatData, formatOra } from "@/lib/format";
-import type { EventoPubblico, SitoFestaPubblica } from "@/lib/sito-pubblico";
+import type { EventoPubblico, MappaPubblica, SitoFestaPubblica } from "@/lib/sito-pubblico";
 import { cn } from "@/lib/utils";
 
 // Pezzi del sito pubblico, senza stato: li usano le pagine e l'anteprima del gestionale.
@@ -153,4 +153,9 @@ export function CaricamentoPubblico() {
       Un attimo...
     </div>
   );
+}
+
+/** Id → nome dei punti, per aprire sulla mappa il luogo di un evento. Senza disegno non c'è niente da aprire. */
+export function luoghiDellaMappa(mappa: MappaPubblica | null): Record<string, string> {
+  return Object.fromEntries((mappa?.punti ?? []).map((p) => [p.id, p.nome]));
 }

@@ -38,6 +38,7 @@ async function seed(statoF1: Festa["stato"] = "preparazione") {
     await setDoc(doc(db, "sito/config"), { ...config(), festaInEvidenzaId: "f1", updatedAt: t });
     for (const f of ["f1", "f2", "f3"]) {
       await setDoc(doc(db, `feste/${f}/programma/e1`), { titolo: "Messa", inizio: t, ordine: 0, ...audit });
+      await setDoc(doc(db, `feste/${f}/avvisi/a1`), { testo: "Spettacolo spostato in piazza", tipo: "importante", attivo: true, ...audit });
       await setDoc(doc(db, `feste/${f}/mappa/config`), { immagine: { url: "https://example.com/m.webp", larghezza: 2000, altezza: 1000 }, updatedAt: t, updatedBy: "seed" });
       await setDoc(doc(db, `feste/${f}/mappa/config/punti/p1`), { nome: "Bagni", categoria: "bagni", x: 0.5, y: 0.5, accessibile: true, ...audit });
     }
@@ -176,6 +177,38 @@ describe("programma", () => {
   });
 });
 
+describe("avvisi", () => {
+  const avviso = (uid: string, extra: Record<string, unknown> = {}) => ({
+    testo: "Rinviata per pioggia", tipo: "importante", attivo: true, createdAt: serverTimestamp(), createdBy: uid, ...upd(uid), ...extra,
+  });
+
+  it("il visitatore legge gli avvisi delle feste pubbliche, non delle altre", async () => {
+    const d = db(null);
+    await assertSucceeds(getDocs(query(collection(d, "feste/f1/avvisi"), where("attivo", "==", true))));
+    await assertSucceeds(getDocs(collection(d, "feste/f2/avvisi")));
+    await assertFails(getDocs(collection(d, "feste/f3/avvisi")));
+    await assertFails(addDoc(collection(d, "feste/f1/avvisi"), avviso("x")));
+  });
+
+  it("li scrivono, spengono e tolgono gli admin; i membri li leggono soltanto", async () => {
+    await assertSucceeds(addDoc(collection(db("admin"), "feste/f1/avvisi"), avviso("admin")));
+    await assertSucceeds(updateDoc(doc(db("admin"), "feste/f1/avvisi/a1"), { attivo: false, ...upd("admin") }));
+    await assertFails(addDoc(collection(db("ref"), "feste/f1/avvisi"), avviso("ref")));
+    await assertFails(updateDoc(doc(db("ref"), "feste/f1/avvisi/a1"), { attivo: false, ...upd("ref") }));
+    await assertSucceeds(getDocs(collection(db("ref"), "feste/f1/avvisi")));
+    await assertFails(deleteDoc(doc(db("ref"), "feste/f1/avvisi/a1")));
+    await assertSucceeds(deleteDoc(doc(db("admin"), "feste/f1/avvisi/a1")));
+  });
+
+  it("rifiuta avvisi non validi", async () => {
+    const d = db("admin");
+    await assertFails(addDoc(collection(d, "feste/f1/avvisi"), avviso("admin", { testo: "" })));
+    await assertFails(addDoc(collection(d, "feste/f1/avvisi"), avviso("admin", { testo: "x".repeat(501) })));
+    await assertFails(addDoc(collection(d, "feste/f1/avvisi"), avviso("admin", { tipo: "urgentissimo" })));
+    await assertFails(addDoc(collection(d, "feste/f1/avvisi"), avviso("admin", { colore: "rosso" })));
+  });
+});
+
 describe("mappa", () => {
   const punto = (uid: string, extra: Record<string, unknown> = {}) => ({
     nome: "Stand", categoria: "mangiare", x: 0.25, y: 1, accessibile: false,
@@ -201,6 +234,20 @@ describe("mappa", () => {
     await assertSucceeds(deleteDoc(doc(a, "feste/f1/mappa/config/punti/p1")));
     await assertFails(addDoc(collection(db("ref"), "feste/f1/mappa/config/punti"), punto("ref")));
     await assertFails(setDoc(doc(db("ref"), "feste/f1/mappa/config"), { immagine: { url: "https://x.it/a", larghezza: 1, altezza: 1 }, ...upd("ref") }));
+  });
+
+  it("l'admin scrive il Wi-Fi anche senza disegno; password WPA valida o niente", async () => {
+    const a = db("admin");
+    const wifi = (w: Record<string, unknown>) => setDoc(doc(a, "feste/f1/mappa/config"), { wifi: w, ...upd("admin") }, { mergeFields: ["wifi", "updatedAt", "updatedBy"] });
+    await assertSucceeds(wifi({ nomeRete: "colleiano-wifi", password: "festa2027", puntoId: "p1" }));
+    await assertSucceeds(wifi({ nomeRete: "colleiano-wifi" }));
+    await assertFails(wifi({ nomeRete: "colleiano-wifi", password: "corta" }));
+    await assertFails(wifi({ nomeRete: "" }));
+    await assertFails(wifi({ nomeRete: "colleiano-wifi", velocita: 100 }));
+    await assertSucceeds(getDoc(doc(db(null), "feste/f1/mappa/config")));
+    await env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), "feste/f1/mappa/config")));
+    await assertSucceeds(setDoc(doc(a, "feste/f1/mappa/config"), { wifi: { nomeRete: "colleiano-wifi" }, ...upd("admin") }));
+    await assertFails(setDoc(doc(db("ref"), "feste/f1/mappa/config"), { wifi: { nomeRete: "x" }, ...upd("ref") }, { merge: true }));
   });
 
   it("rifiuta punti fuori dall'immagine, categorie inventate e altri documenti", async () => {
@@ -259,6 +306,12 @@ describe("permissions.ts coincide con le regole", () => {
           ["testi del sito", perm.puoModificareSito(chi), () => setDoc(doc(d, "sito/config"), config({ updatedBy: uid }))],
           ["archivio", perm.puoModificareSito(chi), () => updateDoc(doc(d, "feste/f1"), { inArchivioPubblico: true, ...upd(uid) })],
           ["programma", perm.puoModificareProgramma(chi, { stato }), () => addDoc(collection(d, "feste/f1/programma"), evento(uid))],
+          ["avviso", perm.puoModificareProgramma(chi, { stato }),
+            () => addDoc(collection(d, "feste/f1/avvisi"), { testo: "Ciao", tipo: "info", attivo: true, createdAt: serverTimestamp(), createdBy: uid, ...upd(uid) })],
+          ["Wi-Fi", perm.puoModificareProgramma(chi, { stato }),
+            () => setDoc(doc(d, "feste/f1/mappa/config"), { wifi: { nomeRete: uid }, ...upd(uid) }, { merge: true })],
+          ["modalità festa", perm.puoModificarePaginaFesta(chi, { stato }),
+            () => updateDoc(doc(d, "feste/f1"), { modalitaFesta: true, ...upd(uid) })],
           ["punto della mappa", perm.puoModificareProgramma(chi, { stato }),
             () => updateDoc(doc(d, "feste/f1/mappa/config/punti/p1"), { x: 0.3, ...upd(uid) })],
         ];

@@ -21,8 +21,8 @@ export function Avviso({ tipo, children }: { tipo: "errore" | "ok"; children: Re
       className={cn(
         "flex items-start gap-2 rounded-md border p-3",
         tipo === "errore"
-          ? "border-colleiano-danger/30 bg-colleiano-danger/5 text-colleiano-danger"
-          : "border-colleiano-success/30 bg-colleiano-success/5 text-colleiano-success",
+          ? "border-colleiano-danger/30 bg-white text-colleiano-danger"
+          : "border-colleiano-success/40 bg-white text-colleiano-success",
       )}
     >
       <Icona className="mt-0.5 size-5 shrink-0" aria-hidden />

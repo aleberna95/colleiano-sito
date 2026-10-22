@@ -38,3 +38,9 @@ export function passaFiltro(p: { categoria: CategoriaPunto; accessibile: boolean
   if (!filtro) return true;
   return filtro === "accessibile" ? p.accessibile : p.categoria === filtro;
 }
+
+/** Testo del QR per collegarsi al Wi-Fi (formato letto dalle fotocamere di iPhone e Android). */
+export function testoQrWifi(wifi: { nomeRete: string; password?: string }): string {
+  const esc = (s: string) => s.replace(/([\\;,:"])/g, "\\$1");
+  return wifi.password ? `WIFI:T:WPA;S:${esc(wifi.nomeRete)};P:${esc(wifi.password)};;` : `WIFI:T:nopass;S:${esc(wifi.nomeRete)};;`;
+}

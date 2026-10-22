@@ -55,7 +55,7 @@ export default function MappaEditorPage() {
     <>
       <TitoloPagina titolo="Mappa" indietro={indietro} />
 
-      {!mappa.dati ? (
+      {!mappa.dati?.immagine ? (
         <Card>
           <CardHeader>
             <CardTitle>
