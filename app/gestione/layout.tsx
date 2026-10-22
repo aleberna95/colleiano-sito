@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   // PWA del gestionale (SPEC 7.3): scope /gestione/, si installa sul telefono.
   manifest: "/gestione/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Colleiano", statusBarStyle: "default" },
-  icons: { apple: "/gestione/apple-touch-icon.png" },
+  // Dichiararle qui sostituisce app/icon.png: vanno messe tutte.
+  icons: { icon: { url: "/gestione/icona-192.png", type: "image/png" }, apple: "/gestione/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = { themeColor: "#1B3022" };
