@@ -34,6 +34,20 @@ service firebase.storage {
         || (isMembro(f) && firestore.get(/databases/(default)/documents/feste/$(f)/movimenti/$(mv)).data.createdBy == request.auth.uid));
     }
 
+    // Immagini del sito pubblico (SPEC 7.1): le vede chiunque.
+    // Quelle di una festa le caricano i suoi admin, quelle generali solo il superadmin.
+    function immagine() { return request.resource.size < 10 * 1024 * 1024 && request.resource.contentType.matches("image/.*"); }
+    match /sito/feste/{f}/{file} {
+      allow read: if true;
+      allow create: if scrivibile(f) && isAdmin(f) && immagine();
+      allow delete: if scrivibile(f) && isAdmin(f);
+    }
+    match /sito/generale/{file} {
+      allow read: if true;
+      allow create: if isSuperadmin() && immagine();
+      allow delete: if isSuperadmin();
+    }
+
     // Tutto il resto è chiuso.
   }
 }

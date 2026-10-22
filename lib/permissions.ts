@@ -193,3 +193,16 @@ export const puoAnnullareMovimento = (io: Io, festa: Pick<Festa, "stato">, m: Mo
 export const puoGestireCassa = (io: Io, festa: Pick<Festa, "stato">) => scrivibile(io, festa) && isAdmin(io);
 
 export const puoAnnullareRimborso = (io: Io, festa: Pick<Festa, "stato">) => scrivibile(io, festa) && io.superadmin;
+
+// ---- Sito pubblico (SPEC 7.1) ----
+
+/** Testi del sito, festa in evidenza e archivio: solo superadmin. */
+export const puoModificareSito = (io: Io) => io.superadmin;
+
+/** Pagina pubblica (e modalità festa) di una festa: i suoi admin, finché non è archiviata. */
+export function puoModificarePaginaFesta(io: Io, festa: Pick<Festa, "stato">): boolean {
+  return io.superadmin || (isAdmin(io) && festa.stato !== "archiviata");
+}
+
+/** Programma, avvisi e mappa della festa: i suoi admin (SPEC 7.1). */
+export const puoModificareProgramma = (io: Io, festa: Pick<Festa, "stato">) => scrivibile(io, festa) && isAdmin(io);

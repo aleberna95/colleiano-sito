@@ -22,3 +22,6 @@ export const auditSchema = z.object({
   updatedAt: timestampSchema,
   updatedBy: uidSchema,
 });
+
+/** Indirizzo di un'immagine pubblica in Storage (download URL). */
+export const urlImmagineSchema = z.url().max(1000);

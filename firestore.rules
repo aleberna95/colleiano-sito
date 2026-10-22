@@ -44,6 +44,47 @@ service cloud.firestore {
     function optInt(d, k) { return !(k in d) || (d[k] is int && d[k] >= 0); }
     function optString(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() <= max); }
 
+    // ---- Sito pubblico (SPEC 7.3) ----
+
+    function urlValido(u) { return u is string && u.size() <= 1000 && u.matches("https?://.+"); }
+    function urlOpt(d, k) { return !(k in d) || urlValido(d[k]); }
+    function paginaValida(p) {
+      return p is map && p.keys().hasOnly(["testo", "copertina", "galleria"])
+        && optString(p, "testo", 5000)
+        && urlOpt(p, "copertina")
+        && p.galleria is list && p.galleria.size() <= 30;
+    }
+    function configValida(d) {
+      return d.keys().hasOnly(["festaInEvidenzaId", "chiSiamo", "comeArrivare", "indirizzo", "linkMappe", "faq",
+             "immagineCopertina", "updatedAt", "updatedBy"])
+        && d.chiSiamo is string && d.chiSiamo.size() <= 5000
+        && d.comeArrivare is string && d.comeArrivare.size() <= 5000
+        && d.indirizzo is string && d.indirizzo.size() <= 200
+        && (d.linkMappe == "" || urlValido(d.linkMappe))
+        && d.faq is list && d.faq.size() <= 30
+        && urlOpt(d, "immagineCopertina")
+        && (!("festaInEvidenzaId" in d) || (d.festaInEvidenzaId is string
+          && exists(/databases/$(database)/documents/feste/$(d.festaInEvidenzaId))));
+    }
+    function inEvidenza(f) {
+      return exists(/databases/$(database)/documents/sito/config)
+        && get(/databases/$(database)/documents/sito/config).data.get("festaInEvidenzaId", null) == f;
+    }
+
+    // Testi del sito e festa in evidenza: li legge chiunque, li scrive solo il superadmin.
+    match /sito/{doc} {
+      allow read: if doc == "config";
+      allow create, update: if doc == "config" && isSuperadmin()
+        && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time
+        && configValida(request.resource.data);
+    }
+
+    // Copia pubblica dei dati della festa, scritta solo dalla Function sitoFesta.
+    // La vede chiunque solo se la festa è in evidenza o nell'archivio; i membri sempre (anteprima).
+    match /sitoFeste/{f} {
+      allow read: if resource.data.inArchivioPubblico == true || inEvidenza(f) || isMembro(f) || isSuperadmin();
+    }
+
     // "Le mie feste": ognuno trova i propri documenti membro con una query collection group.
     match /{path=**}/membri/{uid} {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
@@ -64,6 +105,16 @@ service cloud.firestore {
         && request.resource.data.stato in ["preparazione", "in_corso", "conclusa", "archiviata"]
         && (isSuperadmin()
           || (isAdmin(f) && resource.data.stato != "archiviata" && request.resource.data.stato != "archiviata"));
+
+      // Sito pubblico (SPEC 7.1): l'admin cura pagina e modalità festa; solo il superadmin mette in archivio.
+      allow update: if auditUpdate()
+        && changedOnly(["paginaPubblica", "modalitaFesta", "inArchivioPubblico", "updatedAt", "updatedBy"])
+        && (!("paginaPubblica" in request.resource.data) || paginaValida(request.resource.data.paginaPubblica))
+        && (!("modalitaFesta" in request.resource.data) || request.resource.data.modalitaFesta is bool)
+        && (!("inArchivioPubblico" in request.resource.data) || request.resource.data.inArchivioPubblico is bool)
+        && (isSuperadmin()
+          || (isAdmin(f) && resource.data.stato != "archiviata"
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["inArchivioPubblico"])));
 
       // Scritti solo dalle Functions (SPEC 4.6).
       match /membri/{uid} {
@@ -310,6 +361,35 @@ service cloud.firestore {
       // Rimborsi: solo Functions.
       match /rimborsi/{r} {
         allow read: if isMembro(f) || isSuperadmin();
+      }
+
+      // ---- Sito pubblico (SPEC 7.3) ----
+
+      // I contenuti pubblici della festa li vede chiunque solo se è in evidenza o nell'archivio.
+      function pubblica() {
+        return inEvidenza(f)
+          || (exists(/databases/$(database)/documents/sitoFeste/$(f))
+            && get(/databases/$(database)/documents/sitoFeste/$(f)).data.inArchivioPubblico == true);
+      }
+
+      function eventoValido(d) {
+        return d.keys().hasOnly(["titolo", "inizio", "fine", "puntoId", "descrizione", "ordine",
+               "createdAt", "createdBy", "updatedAt", "updatedBy"])
+          && d.titolo is string && d.titolo.size() >= 1 && d.titolo.size() <= 120
+          && d.inizio is timestamp
+          && (!("fine" in d) || (d.fine is timestamp && d.fine >= d.inizio))
+          && optString(d, "puntoId", 100)
+          && optString(d, "descrizione", 2000)
+          && d.ordine is int;
+      }
+
+      // Programma: lo curano gli admin della festa.
+      match /programma/{id} {
+        allow read: if pubblica() || isMembro(f) || isSuperadmin();
+        allow create: if isAdmin(f) && scrivibile(f) && auditCreate() && eventoValido(request.resource.data);
+        allow update: if isAdmin(f) && scrivibile(f) && auditUpdate() && eventoValido(request.resource.data)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["createdAt", "createdBy"]);
+        allow delete: if isAdmin(f) && scrivibile(f);
       }
     }
   }

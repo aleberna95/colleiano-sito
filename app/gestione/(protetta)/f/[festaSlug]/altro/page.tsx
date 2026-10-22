@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, HandCoins, KeyRound, Layers, Settings, ShieldCheck, Users } from "lucide-react";
+import { ChevronRight, Globe, HandCoins, KeyRound, Layers, Settings, ShieldCheck, Users } from "lucide-react";
 import { TitoloPagina } from "@/components/comuni";
 import { useFesta } from "@/lib/festa-context";
+import { puoModificarePaginaFesta, puoModificareSito } from "@/lib/permissions";
 
 export default function AltroPage() {
   const { festa, io } = useFesta();
@@ -13,6 +14,7 @@ export default function AltroPage() {
     { href: `${base}/commissioni`, label: "Commissioni", icona: Layers },
     { href: `${base}/persone`, label: "Persone", icona: Users },
     { href: `${base}/impostazioni`, label: "Impostazioni della festa", icona: Settings },
+    ...(puoModificarePaginaFesta(io, festa) || puoModificareSito(io) ? [{ href: `${base}/sito`, label: "Sito", icona: Globe }] : []),
     { href: "/gestione/cambia-password", label: "Cambia la mia password", icona: KeyRound },
     ...(io.superadmin ? [{ href: "/gestione/admin", label: "Account e feste", icona: ShieldCheck }] : []),
   ];

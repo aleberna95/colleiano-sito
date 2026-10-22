@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { centsSchema, festaSchema, taskSchema } from "@/lib/schemas";
+import { centsSchema, datiPubbliciFesta, festaSchema, sitoFestaSchema, taskSchema } from "@/lib/schemas";
 
 const ts = { toDate: () => new Date(), toMillis: () => Date.now() };
 const audit = { createdAt: ts, createdBy: "u1", updatedAt: ts, updatedBy: "u1" };
@@ -37,5 +37,27 @@ describe("schemi Zod", () => {
     };
     expect(taskSchema.safeParse(task).success).toBe(true);
     expect(taskSchema.safeParse({ ...task, stato: "in_revisione" }).success).toBe(false);
+  });
+
+  it("la copia pubblica della festa non porta con sé dati interni", () => {
+    const festa = {
+      ...audit,
+      nome: "Festa 2026",
+      slug: "festa-2026",
+      stato: "archiviata",
+      budgetTotaleCents: 100000,
+      categorieSpesa: ["Cibo"],
+      inArchivioPubblico: true,
+      paginaPubblica: { testo: "", galleria: ["https://example.com/a.webp"] },
+    };
+    const pubblici = datiPubbliciFesta(festa);
+    expect(pubblici).toEqual({
+      nome: "Festa 2026",
+      slug: "festa-2026",
+      modalitaFesta: false,
+      inArchivioPubblico: true,
+      paginaPubblica: { galleria: ["https://example.com/a.webp"] },
+    });
+    expect(sitoFestaSchema.safeParse(pubblici).success).toBe(true);
   });
 });

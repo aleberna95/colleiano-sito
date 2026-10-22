@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { admin, creaFesta, creaUtente, svuotaEmulatori } from "./helpers";
+import { admin, creaFesta, creaUtente, esci, svuotaEmulatori } from "./helpers";
 
 // Definition of done: ogni pagina a 375px, contrasto e struttura accessibili (WCAG A/AA), niente scorrimento orizzontale.
 
@@ -29,6 +29,7 @@ test("tutte le pagine principali a 375px sono accessibili", async ({ page }) => 
   test.setTimeout(240_000);
   const anna = await creaUtente({ email: "anna@test.it", password: "password-test", nome: "Anna", devoCambiarePassword: false });
   const luca = await creaUtente({ email: "luca@test.it", password: "password-test", nome: "Luca", devoCambiarePassword: false });
+  await creaUtente({ email: "sara@test.it", password: "password-test", nome: "Sara", superadmin: true, devoCambiarePassword: false });
   const festaId = await creaFesta("prova", [
     { uid: anna, nome: "Anna", admin: true },
     { uid: luca, nome: "Luca", commissioni: { m: "componente" } },
@@ -79,9 +80,26 @@ test("tutte le pagine principali a 375px sono accessibili", async ({ page }) => 
     ["commissioni", `${base}/commissioni`],
     ["commissione", `${base}/commissioni/m`],
     ["impostazioni", `${base}/impostazioni`],
+    ["sito", `${base}/sito`],
+    ["sito-pagina", `${base}/sito/pagina`],
     ["cambia-password", "/gestione/cambia-password"],
   ];
   for (const [nome, url] of pagine) {
+    await page.goto(url);
+    await controlla(page, nome);
+  }
+
+  // Le schede globali del sito sono del superadmin.
+  await esci(page);
+  await page.getByLabel("Email").fill("sara@test.it");
+  await page.getByLabel("Password").fill("password-test");
+  await page.getByRole("button", { name: "Entra" }).click();
+  await expect(page).not.toHaveURL(/login/);
+  for (const [nome, url] of [
+    ["sito-feste", `${base}/sito/feste`],
+    ["sito-testi", `${base}/sito/testi`],
+    ["admin", "/gestione/admin"],
+  ]) {
     await page.goto(url);
     await controlla(page, nome);
   }

@@ -19,3 +19,4 @@ export {
   ripresentaSpesa,
   storicoMovimento,
 } from "./spese";
+export { sitoFesta } from "./sito";
