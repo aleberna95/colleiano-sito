@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, ExternalLink, FileText, Star, Type } from "lucide-react";
+import { ChevronRight, ExternalLink, FileText, Map as IconaMappa, Star, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TitoloPagina } from "@/components/comuni";
 import { Avviso, Caricamento } from "@/components/stato";
 import { useSitoConfig } from "@/lib/data/sito";
 import { useFesta } from "@/lib/festa-context";
-import { puoModificarePaginaFesta, puoModificareSito } from "@/lib/permissions";
+import { puoModificarePaginaFesta, puoModificareProgramma, puoModificareSito } from "@/lib/permissions";
 
 // Voce "Sito" del gestionale (SPEC 7.1): da qui si cura il sito pubblico.
 export default function SitoPage() {
@@ -18,6 +18,7 @@ export default function SitoPage() {
 
   const voci = [
     ...(puoModificarePaginaFesta(io, festa) ? [{ href: `${base}/pagina`, label: "Pagina di questa festa", icona: FileText }] : []),
+    ...(puoModificareProgramma(io, festa) ? [{ href: `${base}/mappa`, label: "Mappa", icona: IconaMappa }] : []),
     ...(puoModificareSito(io)
       ? [
           { href: `${base}/feste`, label: "Festa in evidenza e archivio", icona: Star },

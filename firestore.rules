@@ -391,6 +391,38 @@ service cloud.firestore {
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["createdAt", "createdBy"]);
         allow delete: if isAdmin(f) && scrivibile(f);
       }
+
+      // Mappa: immagine (ridotta al caricamento) e punti con coordinate relative 0..1. La curano gli admin.
+      function coordinata(v) { return (v is int || v is float) && v >= 0 && v <= 1; }
+      function puntoValido(d) {
+        return d.keys().hasOnly(["nome", "categoria", "x", "y", "descrizione", "foto", "orari", "accessibile",
+               "createdAt", "createdBy", "updatedAt", "updatedBy"])
+          && d.nome is string && d.nome.size() >= 1 && d.nome.size() <= 80
+          && d.categoria in ["bagni", "mangiare", "bere", "eventi", "parcheggio", "info", "soccorso", "wifi", "altro"]
+          && coordinata(d.x) && coordinata(d.y)
+          && optString(d, "descrizione", 1000)
+          && optString(d, "orari", 200)
+          && urlOpt(d, "foto")
+          && d.accessibile is bool;
+      }
+      match /mappa/{doc} {
+        allow read: if doc == "config" && (pubblica() || isMembro(f) || isSuperadmin());
+        allow create, update: if doc == "config" && isAdmin(f) && scrivibile(f) && auditUpdate()
+          && request.resource.data.keys().hasOnly(["immagine", "updatedAt", "updatedBy"])
+          && request.resource.data.immagine is map
+          && request.resource.data.immagine.keys().hasOnly(["url", "larghezza", "altezza"])
+          && urlValido(request.resource.data.immagine.url)
+          && request.resource.data.immagine.larghezza is int && request.resource.data.immagine.larghezza > 0
+          && request.resource.data.immagine.altezza is int && request.resource.data.immagine.altezza > 0;
+
+        match /punti/{id} {
+          allow read: if doc == "config" && (pubblica() || isMembro(f) || isSuperadmin());
+          allow create: if doc == "config" && isAdmin(f) && scrivibile(f) && auditCreate() && puntoValido(request.resource.data);
+          allow update: if doc == "config" && isAdmin(f) && scrivibile(f) && auditUpdate() && puntoValido(request.resource.data)
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["createdAt", "createdBy"]);
+          allow delete: if doc == "config" && isAdmin(f) && scrivibile(f);
+        }
+      }
     }
   }
 }

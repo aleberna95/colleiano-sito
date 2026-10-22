@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { CalendarDays, MapPin } from "lucide-react";
 import { CaricamentoPubblico, Copertina, dataFesta, LinkGrande, Sezione, Testo } from "@/components/pubblico";
 import { giorniAlla } from "@/lib/format";
-import { configSito, festaInEvidenza } from "@/lib/sito-pubblico";
+import { configSito, festaInEvidenza, mappa } from "@/lib/sito-pubblico";
 
 // Home del sito, stato normale (SPEC 7.1): cos'è Colleiano, la prossima edizione, i link.
 export default function Home() {
@@ -17,6 +17,7 @@ export default function Home() {
 async function Contenuto() {
   await connection();
   const [config, festa] = await Promise.all([configSito(), festaInEvidenza()]);
+  const conMappa = festa ? (await mappa(festa.id)) !== null : false;
   const giorni = festa?.dataFesta ? giorniAlla(new Date(festa.dataFesta)) : undefined;
 
   return (
@@ -64,6 +65,7 @@ async function Contenuto() {
 
       <Sezione titolo="Scopri di più" className="pb-14">
         <div className="flex flex-col gap-3">
+          {conMappa && <LinkGrande href="/mappa">Mappa del paese</LinkGrande>}
           <LinkGrande href="/info">Come arrivare e domande frequenti</LinkGrande>
           <LinkGrande href="/edizioni" chiaro>
             Edizioni passate

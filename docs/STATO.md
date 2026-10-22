@@ -20,7 +20,7 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 | F2.1 | Voce **"Sito"** nel gestionale: `sito/config` (testi, festa in evidenza, archivio; solo superadmin), dati pubblici della festa (`paginaPubblica`, `modalitaFesta`, `inArchivioPubblico`) copiati da una Function in `sitoFeste/{festaId}`; regole + test (pubblico legge solo `sito/config` e `sitoFeste` + i contenuti della festa in evidenza/archiviata) | ✅ pubblicata il 22/10/2026 |
 | F2.2 | Sito pubblico: home (stato normale), `/info`, `/edizioni`, `/edizioni/[slug]`; inserire l'**edizione 2026** riprendendo testi, programma, artisti e foto da `legacy-site/`; stile del sito attuale (SPEC 9.2) | ✅ pubblicata il 22/10/2026; manca lo script in produzione (lo lancia Alessio) |
 | F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | ✅ in codice il 22/10/2026 (DNS in propagazione) |
-| F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | – |
+| F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | ✅ pubblicata il 22/10/2026 |
 | F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | – |
 | F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | – |
 
@@ -46,6 +46,14 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 - `NEXT_PUBLIC_SITO_URL=https://colleiano.it` in `apphosting.yaml`: i link nei messaggi WhatsApp (`lib/whatsapp.ts`) puntano sempre a colleiano.it, anche aprendo il gestionale da `*.hosted.app`; `metadataBase` nel layout. Sugli emulatori/e2e resta l'origine della pagina.
 - **Da fare da Alessio** (console): Authentication → Impostazioni → Domini autorizzati → `colleiano.it` (e `www.colleiano.it`); se il testo dell'email di reset password (Authentication → Modelli) cita l'indirizzo `hosted.app`, sostituirlo con `colleiano.it/gestione`; in App Hosting impostare `www.colleiano.it` come reindirizzamento a `colleiano.it` se la console lo offre. Quando il dominio è "Connesso", provare dal telefono `colleiano.it` e `colleiano.it/gestione`.
 - Non messo di proposito: `continueUrl` nell'email di reset (serve prima il dominio autorizzato in Auth, altrimenti l'invio fallisce).
+
+### F2.4
+- Dati: `feste/{f}/mappa/config` { immagine: { url, larghezza, altezza } } e `feste/{f}/mappa/config/punti/{id}` { nome, categoria, x, y (0..1, y dall'alto), descrizione?, foto?, orari?, accessibile }. Regole: lettura se festa pubblica o membri, scrittura admin (non archiviata); coordinate 0..1, categorie chiuse. Test in `tests/rules/sito.test.ts`.
+- Il disegno si riduce nel browser a 2560 px WebP (`caricaMappa` in `lib/data/sito.ts`) e va in `sito/feste/{f}/`: l'originale da 4000 px non si carica (limite 10 MB e peso sul telefono).
+- `components/mappa.tsx`: Leaflet 1.9 caricato solo nel browser, `CRS.Simple`, disegno come `imageOverlay`, marker `divIcon` riempiti da React con `createPortal` (icona e colore da `lib/mappa.ts`), +/− da 48 px (CSS in `globals.css`). La vista si inquadra con un `ResizeObserver` quando il contenitore ha la misura vera (senza, partiva zoomata).
+- Editor: Altro → Sito → **Mappa** (admin): carica/cambia il disegno, "Aggiungi un punto" (nasce al centro), trascina, scheda (nome, cosa c'è, descrizione, orari, accessibile, foto), togli. Elenco dei punti sotto.
+- Pubblico `/mappa` (festa in evidenza): bottoni filtro enormi (Tutto + solo le categorie presenti, in ordine SPEC, anche "Accessibile"), punti filtrati che pulsano, scheda dal basso con foto, descrizione, orari, eventi del programma con quel `puntoId`; elenco dei punti sotto la mappa (accessibile anche senza mappa). Link "Mappa del paese" in home se la mappa c'è.
+- Non fatto: "Come arrivo" (i punti non hanno coordinate GPS: servirebbe un campo in più) e "Sei qui" col GPS (facoltativo). Da decidere con Alessio se servono.
 
 Da tenere a mente: il sito pubblico non legge mai task, spese o persone; il manifest pubblico ha scope `/` e quello del gestionale resta `/gestione/` (un solo service worker con strategie diverse, SPEC 7.3: oggi c'è solo `sw/gestione.ts`).
 
@@ -93,7 +101,7 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - Accessibilità: `tests/e2e/accessibilita.spec.ts` apre 19 pagine a 375px, controlla axe (WCAG A/AA, nessun problema serio), niente scorrimento orizzontale, e salva le schermate in `test-results/schermate/`. Corretti i contrasti dei badge di stato e degli avvisi arancioni.
 
 ### Prossimo passo
-**F2.4** (mappa: editor nel gestionale e mappa pubblica con filtri). F2.3 fatta, restano i passi in console di Alessio (sezione F2.3).
+**F2.5** (programma, avvisi, modalità festa, Wi-Fi). F2.3 e F2.4 fatte; restano i passi in console di Alessio (sezione F2.3) e lo script dell'edizione 2026 (sezione F2.2).
 
 Storico (Fase 1): Fase 1 completa e provata in produzione da Alessio il 22/10/2026 (task, allegati, spese con scontrino). Commissioni del comitato inserite nella "Festa di Luglio 2027" (le persone le aggiunge Alessio). Ora: test con 2-3 admin (Antonio da nominare secondo superadmin da Altro → Account e feste); raccogliere le segnalazioni e correggere. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 

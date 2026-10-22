@@ -96,3 +96,42 @@ export const testiSitoFormSchema = z.object({
   faq: z.array(faqSchema).max(30),
 });
 export type TestiSitoForm = z.infer<typeof testiSitoFormSchema>;
+
+// ---- Mappa (SPEC 7.1, 7.3) ----
+
+export const categoriaPuntoSchema = z.enum(["bagni", "mangiare", "bere", "eventi", "parcheggio", "info", "soccorso", "wifi", "altro"]);
+export type CategoriaPunto = z.infer<typeof categoriaPuntoSchema>;
+
+// feste/{f}/mappa/config: l'immagine è già ridotta per il telefono al caricamento.
+export const mappaConfigSchema = z.object({
+  immagine: z.object({ url: urlImmagineSchema, larghezza: z.number().int().positive(), altezza: z.number().int().positive() }),
+  updatedAt: timestampSchema,
+  updatedBy: uidSchema,
+});
+export type MappaConfig = z.infer<typeof mappaConfigSchema>;
+
+/** Coordinata relativa all'immagine: 0 = bordo sinistro/alto, 1 = bordo destro/basso. */
+const coordinataSchema = z.number().min(0).max(1);
+
+// feste/{f}/mappa/config/punti/{id}
+export const puntoSchema = auditSchema.extend({
+  nome: z.string().trim().min(1, "Scrivi il nome").max(80),
+  categoria: categoriaPuntoSchema,
+  x: coordinataSchema,
+  y: coordinataSchema,
+  descrizione: z.string().max(1000).optional(),
+  foto: urlImmagineSchema.optional(),
+  orari: z.string().max(200).optional(),
+  accessibile: z.boolean(),
+});
+export type Punto = z.infer<typeof puntoSchema>;
+
+/** Form della scheda di un punto nel gestionale. */
+export const puntoFormSchema = z.object({
+  nome: z.string().trim().min(1, "Scrivi il nome").max(80),
+  categoria: categoriaPuntoSchema,
+  descrizione: z.string().trim().max(1000),
+  orari: z.string().trim().max(200),
+  accessibile: z.boolean(),
+});
+export type PuntoForm = z.infer<typeof puntoFormSchema>;

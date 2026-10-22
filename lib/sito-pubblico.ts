@@ -1,5 +1,5 @@
 import { cacheLife } from "next/cache";
-import { CONFIG_SITO_VUOTA, type EventoProgramma, type SitoConfig, type SitoFesta } from "@/lib/schemas";
+import { CONFIG_SITO_VUOTA, type EventoProgramma, type MappaConfig, type Punto, type SitoConfig, type SitoFesta } from "@/lib/schemas";
 
 // Il sito pubblico legge Firestore dal server con l'API REST e senza login:
 // valgono le stesse Security Rules di un visitatore (SPEC 7.3) e al telefono non arriva l'SDK di Firebase.
@@ -80,6 +80,8 @@ export type EventoPubblico = Omit<EventoProgramma, "inizio" | "fine" | "createdA
   fine?: number;
 };
 export type ConfigPubblica = Omit<SitoConfig, "updatedAt" | "updatedBy">;
+export type PuntoPubblico = Omit<Punto, "createdAt" | "createdBy" | "updatedAt" | "updatedBy"> & { id: string };
+export type MappaPubblica = { immagine: MappaConfig["immagine"]; punti: PuntoPubblico[] };
 
 // Le modifiche dal gestionale arrivano sul sito entro un minuto (sugli emulatori subito, per i test).
 const profilo = emulatori ? { stale: 0, revalidate: 1, expire: 1 } : { stale: 30, revalidate: 60, expire: 600 };
@@ -119,4 +121,19 @@ export async function programma(festaId: string): Promise<EventoPubblico[]> {
   cacheLife(profilo);
   const eventi = (await cerca("programma", {}, `feste/${festaId}`)) as EventoPubblico[];
   return eventi.sort((a, b) => a.inizio - b.inizio || a.ordine - b.ordine);
+}
+
+/** Disegno e punti della mappa di una festa pubblica; null se non c'è ancora. */
+export async function mappa(festaId: string): Promise<MappaPubblica | null> {
+  "use cache";
+  cacheLife(profilo);
+  const config = (await leggi(`feste/${festaId}/mappa/config`)) as Pick<MappaConfig, "immagine"> | null;
+  if (!config?.immagine) return null;
+  const punti = (await cerca("punti", {}, `feste/${festaId}/mappa/config`)) as PuntoPubblico[];
+  return {
+    immagine: config.immagine,
+    punti: punti
+      .map(({ id, nome, categoria, x, y, descrizione, foto, orari, accessibile }) => ({ id, nome, categoria, x, y, descrizione, foto, orari, accessibile }))
+      .sort((a, b) => a.nome.localeCompare(b.nome)),
+  };
 }

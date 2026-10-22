@@ -38,6 +38,8 @@ async function seed(statoF1: Festa["stato"] = "preparazione") {
     await setDoc(doc(db, "sito/config"), { ...config(), festaInEvidenzaId: "f1", updatedAt: t });
     for (const f of ["f1", "f2", "f3"]) {
       await setDoc(doc(db, `feste/${f}/programma/e1`), { titolo: "Messa", inizio: t, ordine: 0, ...audit });
+      await setDoc(doc(db, `feste/${f}/mappa/config`), { immagine: { url: "https://example.com/m.webp", larghezza: 2000, altezza: 1000 }, updatedAt: t, updatedBy: "seed" });
+      await setDoc(doc(db, `feste/${f}/mappa/config/punti/p1`), { nome: "Bagni", categoria: "bagni", x: 0.5, y: 0.5, accessibile: true, ...audit });
     }
     for (const [uid, m] of Object.entries(membri)) {
       await setDoc(doc(db, `feste/f1/membri/${uid}`), { uid, nomeVisualizzato: uid, telefono: "3330000000", attivo: true, ...m, ...audit });
@@ -174,6 +176,42 @@ describe("programma", () => {
   });
 });
 
+describe("mappa", () => {
+  const punto = (uid: string, extra: Record<string, unknown> = {}) => ({
+    nome: "Stand", categoria: "mangiare", x: 0.25, y: 1, accessibile: false,
+    createdAt: serverTimestamp(), createdBy: uid, ...upd(uid), ...extra,
+  });
+
+  it("il visitatore vede immagine e punti delle feste pubbliche, non delle altre", async () => {
+    const d = db(null);
+    await assertSucceeds(getDoc(doc(d, "feste/f1/mappa/config")));
+    await assertSucceeds(getDocs(collection(d, "feste/f2/mappa/config/punti")));
+    await assertFails(getDoc(doc(d, "feste/f3/mappa/config")));
+    await assertFails(getDocs(collection(d, "feste/f3/mappa/config/punti")));
+    await assertFails(addDoc(collection(d, "feste/f1/mappa/config/punti"), punto("x")));
+  });
+
+  it("la curano gli admin: immagine e punti trascinati", async () => {
+    const a = db("admin");
+    await assertSucceeds(setDoc(doc(a, "feste/f1/mappa/config"), {
+      immagine: { url: "https://example.com/n.webp", larghezza: 2560, altezza: 1440 }, ...upd("admin"),
+    }));
+    await assertSucceeds(addDoc(collection(a, "feste/f1/mappa/config/punti"), punto("admin")));
+    await assertSucceeds(updateDoc(doc(a, "feste/f1/mappa/config/punti/p1"), { x: 0.1, y: 0.9, ...upd("admin") }));
+    await assertSucceeds(deleteDoc(doc(a, "feste/f1/mappa/config/punti/p1")));
+    await assertFails(addDoc(collection(db("ref"), "feste/f1/mappa/config/punti"), punto("ref")));
+    await assertFails(setDoc(doc(db("ref"), "feste/f1/mappa/config"), { immagine: { url: "https://x.it/a", larghezza: 1, altezza: 1 }, ...upd("ref") }));
+  });
+
+  it("rifiuta punti fuori dall'immagine, categorie inventate e altri documenti", async () => {
+    const a = db("admin");
+    await assertFails(addDoc(collection(a, "feste/f1/mappa/config/punti"), punto("admin", { x: 1.2 })));
+    await assertFails(addDoc(collection(a, "feste/f1/mappa/config/punti"), punto("admin", { categoria: "museo" })));
+    await assertFails(addDoc(collection(a, "feste/f1/mappa/config/punti"), punto("admin", { foto: "ftp://x" })));
+    await assertFails(setDoc(doc(a, "feste/f1/mappa/altro"), { immagine: { url: "https://x.it/a", larghezza: 1, altezza: 1 }, ...upd("admin") }));
+  });
+});
+
 describe("immagini del sito (Storage)", () => {
   it("chiunque le vede; le caricano gli admin della festa o il superadmin", async () => {
     await env.withSecurityRulesDisabled((ctx) =>
@@ -221,6 +259,8 @@ describe("permissions.ts coincide con le regole", () => {
           ["testi del sito", perm.puoModificareSito(chi), () => setDoc(doc(d, "sito/config"), config({ updatedBy: uid }))],
           ["archivio", perm.puoModificareSito(chi), () => updateDoc(doc(d, "feste/f1"), { inArchivioPubblico: true, ...upd(uid) })],
           ["programma", perm.puoModificareProgramma(chi, { stato }), () => addDoc(collection(d, "feste/f1/programma"), evento(uid))],
+          ["punto della mappa", perm.puoModificareProgramma(chi, { stato }),
+            () => updateDoc(doc(d, "feste/f1/mappa/config/punti/p1"), { x: 0.3, ...upd(uid) })],
         ];
         for (const [nome, atteso, op] of casi) {
           expect(await esito(op()), `${uid}: ${nome}`).toBe(atteso);
