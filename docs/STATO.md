@@ -11,7 +11,7 @@
   (2) fatto il 21/10/2026: policy di pulizia delle immagini delle Functions:
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
   M4 pubblicata il 21/10/2026 (regole, Storage, 14 Functions). Regola: deploy di regole e Functions PRIMA del push su `main` (App Hosting pubblica la UI a ogni push).
-  M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Da verificare: caricamento di un allegato (le regole di Storage leggono Firestore e potrebbero richiedere un permesso IAM in più).
+  M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Permesso IAM per le regole di Storage che leggono Firestore aggiunto da Alessio il 22/10/2026 (`roles/firebaserules.firestoreServiceAgent` a `service-337081871782@gcp-sa-firebasestorage.iam.gserviceaccount.com`): senza, allegati e scontrini vengono rifiutati. La CLI non lo chiede nel deploy non interattivo.
 
 ## Fase 1
 | Milestone | Stato |
