@@ -4,7 +4,7 @@
 
 ## Setup del repo (SPEC 8.0)
 - [x] 1-5. Ramo `sito-2026` (Pages pubblica da lì, colleiano.it ok, confermato da Alessio), `main` ripulito in `legacy-site/`, spec in `docs/SPEC.md`.
-- [x] 6. Produzione, progetto Firebase `colleiano` (alias `prod`): app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), Firestore `eur3`, Blaze, Auth email/password, Storage, backend App Hosting (passi A-D fatti da Alessio il 21/10/2026). **Passo E (superadmin in produzione) ancora da fare**: `winget install Google.CloudSDK`, nuovo terminale, `gcloud auth application-default login` (account Google proprietario del progetto), `gcloud auth application-default set-quota-project colleiano`, poi dalla cartella del repo `pnpm bootstrap:superadmin --project colleiano --email alebernardini95@gmail.com --nome Alessio --cognome Bernardini --telefono <numero>` (lo lancia Alessio: la password stampata la vede solo lui).
+- [x] 6. Produzione, progetto Firebase `colleiano` (alias `prod`): app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), Firestore `eur3`, Blaze, Auth email/password, Storage, backend App Hosting (passi A-D fatti da Alessio il 21/10/2026). Passo E fatto il 21/10/2026: account creato da Alessio in console, claim e profilo aggiunti con `pnpm bootstrap:superadmin --project colleiano` (Cloud SDK portatile in `%LOCALAPPDATA%\gcloud-zip`, credenziali ADC di Alessio).
   Deploy del 21/10/2026: regole/indici + 6 Functions M2 in europe-west1.
   Indirizzo del gestionale: https://colleiano-hub--colleiano.europe-west4.hosted.app/gestione (backend in europe-west4).
   **Da fare da Alessio**: (1) prova di M1/M2/M3 in produzione con la checklist data in chat (Claude non ha la password del superadmin);
