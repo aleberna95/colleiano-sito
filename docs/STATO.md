@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-> Aggiornato: 21/10/2026. Specifica: `docs/SPEC.md`. Convenzioni e comandi: `CLAUDE.md`.
+> Aggiornato: 22/10/2026. Specifica: `docs/SPEC.md`. Convenzioni e comandi: `CLAUDE.md`.
 
 ## Setup del repo (SPEC 8.0)
 - [x] 1-5. Ramo `sito-2026` (Pages pubblica da lì, colleiano.it ok, confermato da Alessio), `main` ripulito in `legacy-site/`, spec in `docs/SPEC.md`.
@@ -12,6 +12,19 @@
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
   M4 pubblicata il 21/10/2026 (regole, Storage, 14 Functions). Regola: deploy di regole e Functions PRIMA del push su `main` (App Hosting pubblica la UI a ogni push).
   M3 pubblicata il 21/10/2026 (regole Firestore e Storage, Functions + trigger `storicoTask`). Permesso IAM per le regole di Storage che leggono Firestore aggiunto da Alessio il 22/10/2026 (`roles/firebaserules.firestoreServiceAgent` a `service-337081871782@gcp-sa-firebasestorage.iam.gserviceaccount.com`): senza, allegati e scontrini vengono rifiutati. La CLI non lo chiede nel deploy non interattivo.
+
+## Fase 2: sito pubblico (avviata il 22/10/2026)
+Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHub Pages non ha visitatori. Ordine della SPEC 10, diviso in milestone:
+| Milestone | Cosa | Stato |
+|---|---|---|
+| F2.1 | Voce **"Sito"** nel gestionale: `sito/config` (testi, festa in evidenza, archivio; solo superadmin), dati pubblici della festa (`paginaPubblica`, `modalitaFesta`, `inArchivioPubblico`) copiati da una Function in `sitoFeste/{festaId}`; regole + test (pubblico legge solo `sito/config` e `sitoFeste` + i contenuti della festa in evidenza/archiviata) | – |
+| F2.2 | Sito pubblico: home (stato normale), `/info`, `/edizioni`, `/edizioni/[slug]`; inserire l'**edizione 2026** riprendendo testi, programma, artisti e foto da `legacy-site/`; stile del sito attuale (SPEC 9.2) | – |
+| F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | – |
+| F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | – |
+| F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | – |
+| F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | – |
+
+Da tenere a mente: il sito pubblico non legge mai task, spese o persone; il manifest pubblico ha scope `/` e quello del gestionale resta `/gestione/` (un solo service worker con strategie diverse, SPEC 7.3: oggi c'è solo `sw/gestione.ts`).
 
 ## Fase 1
 | Milestone | Stato |

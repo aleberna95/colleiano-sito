@@ -7,7 +7,7 @@ Specifica completa: `docs/SPEC.md`. Stato del lavoro: `docs/STATO.md`. Leggili p
 
 ## Regole (SPEC 0)
 1. **Semplicità.** Se una funzione non è nella spec non si fa. Tra due strade si sceglie quella con meno schermate, passaggi e pezzi in movimento.
-2. **Una fase alla volta.** Ora solo la Fase 1. La Fase 2 non si implementa; le collezioni riservate (`programma`, `avvisi`, `mappa`, `sito/config`, `sitoFeste`, `menu`, `tavoli`, `ordini`, `comande`, `pagamenti`, `prenotazioni`) non si creano.
+2. **Una fase alla volta.** La Fase 1 (gestionale) è chiusa e in produzione. **Ora si fa la Fase 2** (sito pubblico, SPEC 7.1-7.3 e roadmap in SPEC 10), avviata da Alessio il 22/10/2026 senza aspettare: si sistema strada facendo. La parte cibo (SPEC 7.4) resta rimandata: `menu`, `tavoli`, `ordini`, `comande`, `pagamenti`, `prenotazioni` non si creano.
 3. **Permessi = cuore della Fase 1.** Ogni funzione si consegna con Firestore Security Rules **e** test delle regole sull'emulatore (`tests/rules/`). `lib/permissions.ts` replica `firestore.rules` per la UI e un test verifica che coincidano.
 4. **Il sistema nasce vuoto.** In produzione esiste solo il superadmin creato da `scripts/bootstrap-superadmin.ts`. Dati finti solo sull'emulatore.
 5. **Niente email transazionali.** Le comunicazioni passano da WhatsApp con link `wa.me` precompilati; i testi stanno tutti in `lib/whatsapp.ts`. Unica email: il reset password nativo di Firebase Auth (usato anche per far scegliere la password alle persone nuove).
@@ -26,7 +26,7 @@ Next.js 16 (App Router, TS strict) · Tailwind 4 + shadcn/ui (radix) + lucide-re
 Next 16 ha API diverse da quelle note: leggere `node_modules/next/dist/docs/` prima di usare funzioni di Next.
 
 ## Struttura
-- `app/` pagine: `/` segnaposto, `/gestione/...` gestionale.
+- `app/` pagine: `/gestione/...` gestionale; il sito pubblico (Fase 2) va in `app/(pubblico)/` (`/`, `/info`, `/edizioni`, `/programma`, `/mappa`, `/wifi`).
 - `components/ui/` componenti shadcn (pulsanti già portati a 48px).
 - `lib/schemas/` schemi Zod condivisi con le Functions (niente alias `@/` qui dentro: li importa anche `functions/`).
 - `lib/firebase.ts` client; in sviluppo si collega agli emulatori.

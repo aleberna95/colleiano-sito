@@ -478,6 +478,7 @@ Token reali del design system del sito (`legacy-site/css/style.css`), da riporta
 | M5 | Rifinitura: PWA, offline, accessibilità, deploy | Prod online con il solo superadmin |
 
 ### Fase 2: sito pubblico (da ~3-4 mesi prima)
+*Avviata in anticipo da Alessio il 22/10/2026: il sito attuale non ha visitatori, si pubblica presto e si migliora strada facendo.*
 Ordine: **voce "Sito" nel gestionale → home, info ed edizioni passate (inserire l'edizione 2026) → pubblicazione su colleiano.it al posto del sito attuale → editor mappa → mappa pubblica con filtri → programma, avvisi, modalità festa → cache offline → prova sul posto**. La prova va fatta in paese, con il Wi-Fi in piazza, almeno un mese prima: apri l'app in piazza, spegni il Wi-Fi, gira il paese e controlla che tutto funzioni.
 
 **Definition of done (sempre)**: tipi Zod condivisi, regole + test, UI provata a 375 px, stati di caricamento/vuoto/errore gestiti, testi in italiano semplice.
