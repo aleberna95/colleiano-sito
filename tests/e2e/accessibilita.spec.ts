@@ -1,29 +1,12 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { admin, creaFesta, creaUtente, esci, svuotaEmulatori } from "./helpers";
+import { admin, controlla, creaFesta, creaUtente, esci, svuotaEmulatori } from "./helpers";
 
 // Definition of done: ogni pagina a 375px, contrasto e struttura accessibili (WCAG A/AA), niente scorrimento orizzontale.
 
 test.beforeEach(async () => {
   await svuotaEmulatori();
 });
-
-async function controlla(page: Page, nome: string) {
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  // Lascia arrivare i dati (liste, riepiloghi) prima di controllare.
-  await expect(page.getByText("Caricamento...")).toHaveCount(0);
-  await page.screenshot({ path: `test-results/schermate/${nome}.png`, fullPage: true });
-
-  const larghezza = await page.evaluate(() => document.documentElement.scrollWidth);
-  expect(larghezza, `${nome}: scorrimento orizzontale`).toBeLessThanOrEqual(375);
-
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  const gravi = violations
-    .filter((v) => v.impact === "serious" || v.impact === "critical")
-    .map((v) => `${v.id}: ${v.help} → ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(" | ")}`);
-  expect(gravi, `${nome}: problemi di accessibilità`).toEqual([]);
-}
 
 test("tutte le pagine principali a 375px sono accessibili", async ({ page }) => {
   test.setTimeout(240_000);
@@ -52,6 +35,12 @@ test("tutte le pagine principali a 375px sono accessibili", async ({ page }) => 
     tipo: "spesa", commissioneId: "m", descrizione: "Prolunghe", importoCents: 1800, categoria: "Altro",
     dataSpesa: Timestamp.now(), pagatoDa: { tipo: "anticipata", beneficiarioUid: luca }, stato: "approvata", approvatoDa: anna, scontrini: [], eliminato: false, ...audit,
   });
+
+  // Sito pubblico ancora vuoto: stati vuoti che spiegano.
+  for (const [nome, url] of [["home", "/"], ["info", "/info"], ["edizioni", "/edizioni"]]) {
+    await page.goto(url);
+    await controlla(page, `pubblico-${nome}`);
+  }
 
   await page.goto("/gestione/login");
   await controlla(page, "login");

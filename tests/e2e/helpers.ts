@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
@@ -92,4 +93,22 @@ export async function esci(page: Page) {
   await page.getByRole("button", { name: "Esci" }).click();
   await ricaricata;
   await expect(page).toHaveURL(/\/gestione\/login$/);
+}
+
+// Definition of done: ogni pagina a 375px, contrasto e struttura accessibili (WCAG A/AA), niente scorrimento orizzontale.
+export async function controlla(page: Page, nome: string) {
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Lascia arrivare i dati (liste, riepiloghi) prima di controllare.
+  await expect(page.getByText("Caricamento...")).toHaveCount(0);
+  await expect(page.getByText("Un attimo...")).toHaveCount(0);
+  await page.screenshot({ path: `test-results/schermate/${nome}.png`, fullPage: true });
+
+  const larghezza = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(larghezza, `${nome}: scorrimento orizzontale`).toBeLessThanOrEqual(375);
+
+  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  const gravi = violations
+    .filter((v) => v.impact === "serious" || v.impact === "critical")
+    .map((v) => `${v.id}: ${v.help} → ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(" | ")}`);
+  expect(gravi, `${nome}: problemi di accessibilità`).toEqual([]);
 }

@@ -17,12 +17,18 @@
 Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHub Pages non ha visitatori. Ordine della SPEC 10, diviso in milestone:
 | Milestone | Cosa | Stato |
 |---|---|---|
-| F2.1 | Voce **"Sito"** nel gestionale: `sito/config` (testi, festa in evidenza, archivio; solo superadmin), dati pubblici della festa (`paginaPubblica`, `modalitaFesta`, `inArchivioPubblico`) copiati da una Function in `sitoFeste/{festaId}`; regole + test (pubblico legge solo `sito/config` e `sitoFeste` + i contenuti della festa in evidenza/archiviata) | – |
+| F2.1 | Voce **"Sito"** nel gestionale: `sito/config` (testi, festa in evidenza, archivio; solo superadmin), dati pubblici della festa (`paginaPubblica`, `modalitaFesta`, `inArchivioPubblico`) copiati da una Function in `sitoFeste/{festaId}`; regole + test (pubblico legge solo `sito/config` e `sitoFeste` + i contenuti della festa in evidenza/archiviata) | ✅ pubblicata il 22/10/2026 |
 | F2.2 | Sito pubblico: home (stato normale), `/info`, `/edizioni`, `/edizioni/[slug]`; inserire l'**edizione 2026** riprendendo testi, programma, artisti e foto da `legacy-site/`; stile del sito attuale (SPEC 9.2) | – |
 | F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | – |
 | F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | – |
 | F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | – |
 | F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | – |
+
+### F2.1
+- Dati (`lib/schemas/sito.ts`, `festa.ts`): `sito/config` { festaInEvidenzaId?, chiSiamo, comeArrivare, indirizzo, linkMappe, faq[], immagineCopertina? }; sulla festa `modalitaFesta`, `inArchivioPubblico`, `paginaPubblica` { testo?, copertina?, galleria[] } (immagini = download URL di Storage); `feste/{f}/programma/{id}` { titolo, inizio, fine?, puntoId?, descrizione?, ordine } (regole già pronte, editor in F2.5).
+- Trigger `sitoFesta` (`functions/src/sito.ts`): a ogni scrittura di `feste/{f}` riscrive `sitoFeste/{f}` con `datiPubbliciFesta` (niente budget, categorie, stato); la cancella se la festa sparisce. Le feste nate prima del deploy hanno la copia solo dopo una modifica: scegliendo la festa in evidenza la pagina la "tocca" apposta.
+- Regole: `sito/config` lettura libera, scrittura superadmin (festa in evidenza deve esistere, link http/https); `sitoFeste` letto da chiunque se in archivio o in evidenza, dai membri sempre (anteprima), scritto solo dalla Function; sulla festa l'admin cambia `paginaPubblica`/`modalitaFesta` (non se archiviata), solo il superadmin `inArchivioPubblico`; `programma` letto da chiunque se la festa è pubblica (`pubblica()` = in evidenza o in archivio), scritto dagli admin. Storage: `sito/feste/{f}/*` (admin della festa) e `sito/generale/*` (superadmin), solo immagini < 10 MB, lettura libera. Test `tests/rules/sito.test.ts` con parità (`puoModificareSito`, `puoModificarePaginaFesta`, `puoModificareProgramma`).
+- UI: Altro → **Sito** (per admin e superadmin): dove compare la festa, "Apri il sito"; **Pagina di questa festa** (testo, copertina, galleria fino a 30; le foto si riducono a 1600 px WebP nel browser, `lib/data/sito.ts`); per il superadmin **Festa in evidenza e archivio** e **Testi del sito** (foto della home, chi siamo, come arrivare, FAQ).
 
 Da tenere a mente: il sito pubblico non legge mai task, spese o persone; il manifest pubblico ha scope `/` e quello del gestionale resta `/gestione/` (un solo service worker con strategie diverse, SPEC 7.3: oggi c'è solo `sw/gestione.ts`).
 

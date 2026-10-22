@@ -38,7 +38,12 @@ export function dataDaInput(giorno: string): Date {
   return new Date(`${giorno}T12:00:00Z`);
 }
 
-export function giorniAlla(ts: TimestampLike): number {
+/** "17:30", ora italiana. */
+export function formatOra(ts: TimestampLike | Date): string {
+  return format(inItalia(ts), "HH:mm");
+}
+
+export function giorniAlla(ts: TimestampLike | Date): number {
   return differenceInCalendarDays(inItalia(ts), inItalia(new Date()));
 }
 
