@@ -6,7 +6,7 @@
 - [x] 1-5. Ramo `sito-2026` (Pages pubblica da lì, colleiano.it ok, confermato da Alessio), `main` ripulito in `legacy-site/`, spec in `docs/SPEC.md`.
 - [x] 6. Produzione, progetto Firebase `colleiano` (alias `prod`): app web "Colleiano Hub" (appId `1:337081871782:web:829ff8d0f4e94854fe7367`), Firestore `eur3`, Blaze, Auth email/password, Storage, backend App Hosting (passi A-D fatti da Alessio il 21/10/2026). Passo E fatto il 21/10/2026: account creato da Alessio in console, claim e profilo aggiunti con `pnpm bootstrap:superadmin --project colleiano` (Cloud SDK portatile in `%LOCALAPPDATA%\gcloud-zip`, credenziali ADC di Alessio).
   Deploy del 21/10/2026: regole/indici + 6 Functions M2 in europe-west1.
-  Indirizzo del gestionale: https://colleiano-hub--colleiano.europe-west4.hosted.app/gestione (backend in europe-west4).
+  Indirizzo del gestionale: https://colleiano.it/gestione dalla F2.3 (prima e sempre valido: https://colleiano-hub--colleiano.europe-west4.hosted.app/gestione, backend in europe-west4).
   **Da fare da Alessio**: (1) prova di M1/M2/M3 in produzione con la checklist data in chat (Claude non ha la password del superadmin);
   (2) fatto il 21/10/2026: policy di pulizia delle immagini delle Functions:
   `pnpm exec firebase functions:artifacts:setpolicy --location europe-west1 --days 1 --project prod`.
@@ -19,7 +19,7 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 |---|---|---|
 | F2.1 | Voce **"Sito"** nel gestionale: `sito/config` (testi, festa in evidenza, archivio; solo superadmin), dati pubblici della festa (`paginaPubblica`, `modalitaFesta`, `inArchivioPubblico`) copiati da una Function in `sitoFeste/{festaId}`; regole + test (pubblico legge solo `sito/config` e `sitoFeste` + i contenuti della festa in evidenza/archiviata) | ✅ pubblicata il 22/10/2026 |
 | F2.2 | Sito pubblico: home (stato normale), `/info`, `/edizioni`, `/edizioni/[slug]`; inserire l'**edizione 2026** riprendendo testi, programma, artisti e foto da `legacy-site/`; stile del sito attuale (SPEC 9.2) | ✅ pubblicata il 22/10/2026; manca lo script in produzione (lo lancia Alessio) |
-| F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | – |
+| F2.3 | **colleiano.it su App Hosting**: dominio personalizzato (record DNS li mette Alessio), domini autorizzati di Auth, testo dell'email con il nuovo indirizzo, disattivare GitHub Pages (il ramo `sito-2026` resta come archivio). Il gestionale passa a `colleiano.it/gestione` | ✅ in codice il 22/10/2026 (DNS in propagazione) |
 | F2.4 | **Mappa**: editor nel gestionale (immagine + punti trascinabili, coordinate 0..1) e mappa pubblica con bottoni filtro enormi (Leaflet `CRS.Simple`); immagine segnaposto finché non c'è il disegno | – |
 | F2.5 | **Programma, avvisi, modalità festa, Wi-Fi** (`/programma`, `/wifi`, home in modalità festa) | – |
 | F2.6 | **PWA pubblica** con cache offline completa (SPEC 7.2), "Aggiornato alle…", prova in piazza | – |
@@ -39,6 +39,13 @@ Decisione di Alessio: partire subito, senza mesi di prova; il sito 2026 su GitHu
 - Nota: `pnpm test:e2e -- <filtro>` non funziona (l'argomento va a firebase); per un solo file, dopo la build: `pnpm exec cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 firebase emulators:exec --only auth,firestore,functions --project demo-colleiano "playwright test sito"`.
 
 **Da fare da Alessio dopo la F2.2**: `pnpm edizione-2026 --project colleiano` (la sessione di Claude non ha il permesso di scrivere dati in produzione); poi controllare indirizzo ("Colleiano, 63093 Roccafluvione (AP)", ricavato dal CAP del sito 2026) e testi da Altro → Sito → Testi del sito; scegliere la festa in evidenza (Altro → Sito → Festa in evidenza e archivio); caricare qualche foto.
+
+### F2.3
+- 22/10/2026: Alessio ha aggiunto in App Hosting i domini `colleiano.it` e `www.colleiano.it` e su Aruba (DNS `technorail`/`arubadns`) i record A `35.219.200.105`, TXT `fah-claim` e CNAME `_acme-challenge_…`; tolti i 4 A di GitHub (`185.199.108-111.153`), record `mx` lasciati com'erano. Propagazione in corso (i 4 name server di Aruba si allineano con calma).
+- GitHub Pages disattivato da Claude (`gh api -X DELETE repos/aleberna95/colleiano-sito/pages`; prima: ramo `sito-2026`, cname `colleiano.it`). Il ramo resta come archivio.
+- `NEXT_PUBLIC_SITO_URL=https://colleiano.it` in `apphosting.yaml`: i link nei messaggi WhatsApp (`lib/whatsapp.ts`) puntano sempre a colleiano.it, anche aprendo il gestionale da `*.hosted.app`; `metadataBase` nel layout. Sugli emulatori/e2e resta l'origine della pagina.
+- **Da fare da Alessio** (console): Authentication → Impostazioni → Domini autorizzati → `colleiano.it` (e `www.colleiano.it`); se il testo dell'email di reset password (Authentication → Modelli) cita l'indirizzo `hosted.app`, sostituirlo con `colleiano.it/gestione`; in App Hosting impostare `www.colleiano.it` come reindirizzamento a `colleiano.it` se la console lo offre. Quando il dominio è "Connesso", provare dal telefono `colleiano.it` e `colleiano.it/gestione`.
+- Non messo di proposito: `continueUrl` nell'email di reset (serve prima il dominio autorizzato in Auth, altrimenti l'invio fallisce).
 
 Da tenere a mente: il sito pubblico non legge mai task, spese o persone; il manifest pubblico ha scope `/` e quello del gestionale resta `/gestione/` (un solo service worker con strategie diverse, SPEC 7.3: oggi c'è solo `sw/gestione.ts`).
 
@@ -86,7 +93,7 @@ Login, "Password dimenticata?" (reset nativo, non rivela se l'email esiste), cam
 - Accessibilità: `tests/e2e/accessibilita.spec.ts` apre 19 pagine a 375px, controlla axe (WCAG A/AA, nessun problema serio), niente scorrimento orizzontale, e salva le schermate in `test-results/schermate/`. Corretti i contrasti dei badge di stato e degli avvisi arancioni.
 
 ### Prossimo passo
-**F2.3** (colleiano.it su App Hosting): servono i passi di Alessio (dominio personalizzato in console e record DNS); poi Claude: domini autorizzati di Auth già fatti da Alessio, link nelle email/WhatsApp verso colleiano.it, disattivare GitHub Pages (`gh api -X DELETE repos/aleberna95/colleiano-sito/pages`, il ramo `sito-2026` resta). Poi F2.4 (mappa).
+**F2.4** (mappa: editor nel gestionale e mappa pubblica con filtri). F2.3 fatta, restano i passi in console di Alessio (sezione F2.3).
 
 Storico (Fase 1): Fase 1 completa e provata in produzione da Alessio il 22/10/2026 (task, allegati, spese con scontrino). Commissioni del comitato inserite nella "Festa di Luglio 2027" (le persone le aggiunge Alessio). Ora: test con 2-3 admin (Antonio da nominare secondo superadmin da Altro → Account e feste); raccogliere le segnalazioni e correggere. Resta: prova in produzione di Alessio (checklist in chat) e correzioni che ne escono. Poi, quando Alessio lo decide, la Fase 2 (SPEC 10).
 

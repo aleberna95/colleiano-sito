@@ -13,6 +13,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITO_URL ?? "http://localhost:3000"),
   title: "Colleiano",
   description: "Le feste del comitato di Colleiano",
 };

@@ -21,3 +21,7 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: 1:337081871782:web:829ff8d0f4e94854fe7367
     availability: [BUILD, RUNTIME]
+  # Indirizzo pubblico: link nei messaggi WhatsApp e metadati delle pagine.
+  - variable: NEXT_PUBLIC_SITO_URL
+    value: https://colleiano.it
+    availability: [BUILD, RUNTIME]

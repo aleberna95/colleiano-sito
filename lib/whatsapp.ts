@@ -15,13 +15,18 @@ export function linkWhatsApp(testo: string, telefono?: string): string {
   return `https://wa.me/${destinatario}?text=${encodeURIComponent(testo)}`;
 }
 
+/** In produzione sempre https://colleiano.it (apphosting.yaml), anche se si apre dall'indirizzo di App Hosting. */
+function origine(): string {
+  return process.env.NEXT_PUBLIC_SITO_URL ?? (typeof window === "undefined" ? "" : window.location.origin);
+}
+
 export function indirizzoGestionale(): string {
-  return typeof window === "undefined" ? "/gestione" : `${window.location.origin}/gestione`;
+  return `${origine()}/gestione`;
 }
 
 /** Indirizzo completo di una pagina del gestionale, da mettere nei messaggi. */
 export function linkPagina(percorso: string): string {
-  return typeof window === "undefined" ? percorso : `${window.location.origin}${percorso}`;
+  return `${origine()}${percorso}`;
 }
 
 const conScadenza = (scadenza?: string) => (scadenza ? `\nEntro: ${scadenza}` : "");

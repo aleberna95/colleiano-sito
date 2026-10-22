@@ -294,7 +294,7 @@ Dalla pagina di login parte il reset nativo di Firebase Auth via email. In alter
 ## 7. Il giorno della festa (Fase 2, NON sviluppare ora)
 
 ### 7.1 Il sito pubblico colleiano.it
-Questo progetto **sostituisce** il sito attuale di colleiano.it (fatto per l'edizione 2026, HTML statico su GitHub Pages dal ramo `sito-2026` di questo stesso repo), che resta online così com'è fino al rilascio della Fase 2. Il passaggio si fa spostando il DNS su App Hosting e disattivando GitHub Pages; il ramo `sito-2026` resta come archivio. Il sito nuovo è generico e vive tutto l'anno; i contenuti della festa compaiono da soli quando un admin la rende pubblica.
+Questo progetto **sostituisce** il sito attuale di colleiano.it (fatto per l'edizione 2026, HTML statico su GitHub Pages dal ramo `sito-2026` di questo stesso repo), che resta online così com'è fino al rilascio della Fase 2. *(Fatto il 22/10/2026: DNS su App Hosting, GitHub Pages disattivato.)* Il passaggio si fa spostando il DNS su App Hosting e disattivando GitHub Pages; il ramo `sito-2026` resta come archivio. Il sito nuovo è generico e vive tutto l'anno; i contenuti della festa compaiono da soli quando un admin la rende pubblica.
 
 Si apre anche dalla fotocamera: nessun download, nessun login, funziona su qualsiasi telefono. Al massimo 2 tocchi per arrivare a qualsiasi cosa.
 
