@@ -56,21 +56,21 @@ function RimborsoPersona() {
     <>
       <TitoloPagina titolo={c.nome} indietro={indietro} />
       <Card>
-        <CardContent className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-muted-foreground">Anticipato</p>
-            <p className="text-lg font-semibold tabular-nums">{formatEuro(c.anticipatoCents)}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Rimborsato</p>
-            <p className="text-lg font-semibold tabular-nums">{formatEuro(c.rimborsatoCents)}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Da ricevere</p>
-            <p className={cn("text-2xl font-semibold tabular-nums", c.daRimborsareCents ? "text-colleiano-rust" : "text-colleiano-success")}>
+        <CardContent className="flex flex-col gap-2">
+          <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="text-muted-foreground">Anticipato</span>
+            <span className="text-lg font-semibold tabular-nums">{formatEuro(c.anticipatoCents)}</span>
+          </p>
+          <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="text-muted-foreground">Rimborsato</span>
+            <span className="text-lg font-semibold tabular-nums">{formatEuro(c.rimborsatoCents)}</span>
+          </p>
+          <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="text-muted-foreground">Da ricevere</span>
+            <span className={cn("text-2xl font-semibold tabular-nums", c.daRimborsareCents ? "text-colleiano-rust" : "text-colleiano-success")}>
               {formatEuro(c.daRimborsareCents)}
-            </p>
-          </div>
+            </span>
+          </p>
         </CardContent>
       </Card>
 

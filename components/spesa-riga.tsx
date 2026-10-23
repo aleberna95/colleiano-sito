@@ -64,7 +64,7 @@ export function ListaSpese({ movimenti }: { movimenti: MovimentoConId[] }) {
 
 function Voce({ etichetta, valore, evidenza }: { etichetta: string; valore: number; evidenza?: boolean }) {
   return (
-    <div className="flex flex-col rounded-md bg-muted/60 p-3">
+    <div className="flex min-w-0 flex-col rounded-md bg-muted/60 p-3">
       <span className="text-muted-foreground">{etichetta}</span>
       <span className={cn("text-xl font-semibold tabular-nums", evidenza && valore < 0 && "text-colleiano-danger")}>{formatEuro(valore)}</span>
     </div>
@@ -77,7 +77,7 @@ export function RiepilogoSpese({ r }: { r: Riepilogo }) {
   return (
     <section aria-labelledby="riepilogo" className="flex flex-col gap-3 rounded-lg border bg-colleiano-surface p-4 shadow-xs">
       <h2 id="riepilogo" className="text-2xl">Riepilogo</h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
         {r.budgetCents !== undefined && <Voce etichetta="Budget" valore={r.budgetCents} />}
         <Voce etichetta="Spese approvate" valore={r.approvatoCents} />
         <Voce etichetta="In attesa" valore={r.inAttesaCents} />

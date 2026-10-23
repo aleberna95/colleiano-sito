@@ -102,14 +102,14 @@ function BarraInBasso({ base }: { base: string }) {
 
   return (
     <nav aria-label="Sezioni" className="fixed inset-x-0 bottom-0 z-10 border-t bg-colleiano-surface pb-[env(safe-area-inset-bottom)]">
-      <ul className="mx-auto grid max-w-5xl grid-cols-4">
+      <ul className="mx-auto grid max-w-5xl grid-cols-[1.25fr_1fr_1fr_1fr]">
         {VOCI.map(({ href, label, icona: Icona }) => (
           <li key={href}>
             <Link
               href={`${base}${href}`}
               aria-current={attiva(href) ? "page" : undefined}
               className={cn(
-                "flex min-h-16 flex-col items-center justify-center gap-1 text-[0.95rem]",
+                "flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-1 text-center text-[0.95rem] leading-tight",
                 attiva(href) ? "font-semibold text-colleiano-forest" : "text-muted-foreground",
               )}
             >

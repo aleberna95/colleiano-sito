@@ -35,16 +35,19 @@ export default function RimborsiPage() {
           {righe.map((c) => (
             <li key={c.chiave}>
               <Link href={`${base}/rimborsi/${chiaveUrl(c.chiave)}`} className="flex items-center gap-3 rounded-lg border bg-colleiano-surface p-4 shadow-xs">
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="text-lg font-semibold text-colleiano-forest">{c.nome}</span>
-                  <span className="text-muted-foreground">
-                    Anticipato {formatEuro(c.anticipatoCents)} · già rimborsato {formatEuro(c.rimborsatoCents)}
+                {/* Con poco spazio l'importo va sotto invece di schiacciare il testo */}
+                <span className="flex min-w-0 flex-1 flex-wrap items-end gap-x-3 gap-y-2">
+                  <span className="flex min-w-36 flex-1 flex-col gap-1">
+                    <span className="text-lg font-semibold text-colleiano-forest">{c.nome}</span>
+                    <span className="text-muted-foreground">
+                      Anticipato {formatEuro(c.anticipatoCents)} · già rimborsato {formatEuro(c.rimborsatoCents)}
+                    </span>
                   </span>
-                </span>
-                <span className="flex flex-col items-end">
-                  <span className="text-[0.95rem] text-muted-foreground">Da rimborsare</span>
-                  <span className={cn("text-2xl font-semibold tabular-nums", c.daRimborsareCents ? "text-colleiano-rust" : "text-colleiano-success")}>
-                    {formatEuro(c.daRimborsareCents)}
+                  <span className="ml-auto flex flex-col items-end">
+                    <span className="text-[0.95rem] text-muted-foreground">Da rimborsare</span>
+                    <span className={cn("text-2xl font-semibold tabular-nums", c.daRimborsareCents ? "text-colleiano-rust" : "text-colleiano-success")}>
+                      {formatEuro(c.daRimborsareCents)}
+                    </span>
                   </span>
                 </span>
                 <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
