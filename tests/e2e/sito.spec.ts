@@ -130,6 +130,16 @@ test("l'admin mette i punti sulla mappa e il visitatore li filtra", async ({ pag
     await expect(page.getByRole("button", { name: "Bagni della piazza (Bagni)" })).toBeVisible({ timeout: 3000 });
   });
   await controlla(page, "pubblico-mappa");
+  // Zoom libero: ci si può allontanare oltre il disegno intero (resta piccolo al centro).
+  const larghezze = () =>
+    page.evaluate(() => [document.querySelector(".leaflet-image-layer")!.getBoundingClientRect().width, document.querySelector(".mappa-colleiano")!.clientWidth]);
+  const [intera, riquadro] = await larghezze();
+  expect(intera).toBeGreaterThan(riquadro * 0.75);
+  const allontana = page.getByRole("button", { name: "Zoom out" });
+  await allontana.click();
+  await expect.poll(async () => (await larghezze())[0]).toBeLessThan(intera * 0.6);
+  await allontana.click();
+  await expect.poll(async () => (await larghezze())[0]).toBeLessThan(intera * 0.3);
   await page.getByRole("button", { name: "Bagni", exact: true }).click();
   await expect(page.getByRole("button", { name: "Bagni", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "Stand della porchetta (Mangiare)" })).toHaveCount(0);

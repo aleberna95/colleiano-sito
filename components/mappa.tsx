@@ -58,7 +58,7 @@ export function Mappa({
         crs: L.CRS.Simple,
         zoomSnap: 0.25,
         attributionControl: false,
-        maxBounds: limiti.pad(0.2),
+        maxBounds: limiti.pad(0.5),
         maxBoundsViscosity: 1,
       });
       L.imageOverlay(url, limiti).addTo(map);
@@ -67,11 +67,14 @@ export function Mappa({
       osservatore = new ResizeObserver(() => {
         if (!map || !contenitore.current?.clientWidth) return;
         map.invalidateSize();
+        // Zoom libero: si può allontanare fino a vedere il disegno intero e piccolo, poi riavvicinare.
+        // getBoundsZoom resta dentro i limiti attuali: prima li si allarga.
+        map.setMinZoom(-10);
+        const zoom = map.getBoundsZoom(limiti);
+        map.setMinZoom(zoom - 2);
+        map.setMaxZoom(zoom + 4);
         if (inquadrata) return;
         inquadrata = true;
-        const zoom = map.getBoundsZoom(limiti);
-        map.setMinZoom(zoom - 0.5);
-        map.setMaxZoom(zoom + 4);
         map.fitBounds(limiti);
       });
       osservatore.observe(contenitore.current);
